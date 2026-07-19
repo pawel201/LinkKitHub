@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkKitHub - Creator Analytics Console</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Premium Custom Scrollbar Layout Rules */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <div class="w-64 bg-gray-950 flex flex-col justify-between border-r border-gray-800">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-10">
+                    <i class="fa-solid fa-circle-nodes text-indigo-500 text-2xl"></i>
+                    <span class="text-xl font-bold tracking-wider text-white">LinkKitHub</span>
+                </div>
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600 text-white font-medium transition"><i class="fa-solid fa-chart-pie w-5"></i><span>Dashboard</span></a>
+                    <button onclick="launchPublicBioPage()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition text-left cursor-pointer font-medium"><i class="fa-solid fa-link w-5"></i><span>My Public Bio Page</span></button>
+                    <a href="index.html" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition font-medium mt-1"><i class="fa-solid fa-house w-5"></i><span>Back to Home</span></a>
+                </nav>
+            </div>
+            <div class="p-6 border-t border-gray-800 flex justify-between items-center text-sm text-gray-500">
+                <span id="creator-identity-tag">Loading User...</span>
+                <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 transition cursor-pointer" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col overflow-y-auto bg-gray-900">
+            
+            <header class="bg-gray-950/50 backdrop-blur border-b border-gray-800 px-8 py-4 flex justify-between items-center sticky top-0 z-40">
+                <h1 class="text-2xl font-bold text-white">Console Overview</h1>
+                <div class="flex items-center gap-4">
+                    <button onclick="upgradeToPro()" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold px-5 py-2 rounded-lg text-sm shadow-lg shadow-indigo-500/20 transition cursor-pointer transform active:scale-95 border border-indigo-400">
+                        <i class="fa-solid fa-bolt text-yellow-300 mr-1"></i> Upgrade to Pro
+                    </button>
+                    <span class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-500/20 flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></span> Server Connected</span>
+                </div>
+            </header>
+
+            <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-950 p-6 rounded-xl border border-gray-800 flex items-center justify-between shadow-xl">
+                        <div><p class="text-sm font-medium text-gray-400 uppercase">Total Link Clicks</p><h3 id="total-clicks-counter" class="text-3xl font-bold text-white mt-2">0</h3></div>
+                        <div class="p-4 bg-indigo-500/10 rounded-lg text-indigo-400"><i class="fa-solid fa-mouse-pointer text-2xl"></i></div>
+                    </div>
+                    <div class="bg-gray-950 p-6 rounded-xl border border-emerald-800 shadow-xl flex items-center justify-between bg-gradient-to-br from-gray-950 to-emerald-950/10">
+                        <div><p class="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Total Revenue Earned</p><h3 id="total-revenue-counter" class="text-3xl font-extrabold text-white mt-2">$0.00</h3></div>
+                        <div class="p-4 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-wallet text-2xl"></i></div>
+                    </div>
+                    <div class="bg-gray-950 p-6 rounded-xl border border-gray-800 flex items-center justify-between shadow-xl">
+                        <div><p class="text-sm font-medium text-gray-400 uppercase">Leads Captured</p><h3 id="lead-captures-counter" class="text-3xl font-bold text-white mt-2">0</h3></div>
+                        <div class="p-4 bg-amber-500/10 rounded-lg text-amber-400"><i class="fa-solid fa-user-check text-2xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-chart-line text-indigo-400"></i> Rolling 7-Days Performance Matrix</h2>
+                        <p class="text-sm text-gray-400 mt-1">Granular graph overlays computing incoming viewer traffic spikes mapped directly against sales trends.</p>
+                    </div>
+                    <div class="h-64 w-full relative">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div><h2 class="text-xl font-bold text-white">Profile Customization Settings</h2><p class="text-sm text-gray-400 mt-1">Personalize branding parameters, active themes, visual layout styles and pricing models.</p></div>
+                    <form onsubmit="saveProfileSettings(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div><label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Username handle display:</label><input id="profile-username-input" type="text" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                            <div><label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Bio Main Title Header:</label><input id="profile-title-input" type="text" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                            <div><label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Custom Avatar Image Web URL:</label><input id="profile-avatar-input" type="url" placeholder="https://..." class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition"></div>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Theme Preset:</label>
+                                    <select id="profile-theme-input" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer">
+                                        <option value="midnight">Midnight Onyx</option>
+                                        <option value="sunset">Sunset Fuchsia</option>
+                                        <option value="emerald">Emerald Forest</option>
+                                        <option value="ocean">Abyssal Trench</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-emerald-400 uppercase mb-1">Strategy Call Price ($):</label>
+                                    <input id="profile-rate-input" type="number" step="0.01" class="w-full bg-gray-900 border border-emerald-900/40 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono font-bold" required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 border-t border-gray-800/80 pt-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-indigo-400 uppercase mb-1">Button Visual Shape:</label>
+                                    <select id="profile-button-style-input" class="w-full bg-gray-900 border border-indigo-900/40 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer font-bold">
+                                        <option value="solid">Solid Slate Classic</option>
+                                        <option value="rounded">Soft Rounded Pills</option>
+                                        <option value="neon">Neon Glowing Shadow</option>
+                                        <option value="glass">Glassmorphism Sheer</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-indigo-400 uppercase mb-1">Identity Font Family:</label>
+                                    <select id="profile-font-input" class="w-full bg-gray-900 border border-indigo-900/40 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition cursor-pointer font-bold">
+                                        <option value="sans">Sans Serif (Modern)</option>
+                                        <option value="mono">Space Mono (Tech)</option>
+                                        <option value="serif">Lora Serif (Elegant)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4 flex flex-col justify-between">
+                            <div><label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Bio Description Paragraph:</label><textarea id="profile-desc-input" rows="11" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition resize-none" required></textarea></div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm cursor-pointer"><i class="fa-regular fa-floppy-disk mr-1.5"></i> Save Profile Customizations</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2"><i class="fa-solid fa-globe text-indigo-400"></i> Custom Domain White-Label Mapping</h2>
+                        <p class="text-sm text-gray-400 mt-1">Connect your personalized brand root or subdomain to point directly to your LinkKitHub bio page structure.</p>
+                    </div>
+                    <form onsubmit="connectCustomDomain(event)" class="flex flex-col sm:flex-row gap-3 items-end">
+                        <div class="flex-1 w-full">
+                            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Enter Custom Domain Name:</label>
+                            <input id="domain-input" type="text" placeholder="links.myusername.com" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition font-mono font-bold">
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button type="submit" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition cursor-pointer"><i class="fa-solid fa-plug mr-1"></i> Connect Domain</button>
+                            <button type="button" onclick="disconnectCustomDomain()" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 text-red-400 text-xs font-bold px-4 py-2.5 rounded-lg transition cursor-pointer">Remove</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div><h2 class="text-xl font-bold text-white">Recent Sales & Invoices Stream</h2><p class="text-sm text-gray-400 mt-1">Real-time payment transaction monitoring logging successful creator payouts.</p></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Transaction Date</th><th class="pb-3">Buyer Email</th><th class="pb-3">Item Purchased</th><th class="pb-3 text-right">Payout Amount</th></tr></thead><tbody id="sales-table-body" class="divide-y divide-gray-800 text-sm"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+                        <div><h2 class="text-xl font-bold text-white">Automated Email Dispatcher Logs</h2><p class="text-sm text-slate-400 mt-1">Real-time tracking of outbound platform confirmation emails enqueued and delivered via SMTP relays.</p></div>
+                        <button onclick="clearEmailLogs()" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 text-red-400 text-xs font-semibold px-4 py-2 rounded-lg transition cursor-pointer"><i class="fa-solid fa-trash-can mr-1"></i> Clear Mail History</button>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Mail Dispatch Timestamp</th><th class="pb-3">Recipient Address</th><th class="pb-3">Email Subject Line</th><th class="pb-3 text-right">Delivery Status</th></tr></thead><tbody id="email-logs-body" class="divide-y divide-gray-800 text-xs font-mono text-slate-400"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div><h2 class="text-xl font-bold text-white">Upcoming 1:1 Consultancy Appointments</h2><p class="text-sm text-gray-400 mt-1">Review active booking requests received directly from your public scheduling page.</p></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Client Name</th><th class="pb-3">Email Address</th><th class="pb-3">Scheduled Date</th><th class="pb-3">Time Slot</th><th class="pb-3 text-right">Actions</th></tr></thead><tbody id="bookings-table-body" class="divide-y divide-gray-800 text-sm"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+                        <div><h2 class="text-xl font-bold text-white">Digital Products & Lead Magnets Store</h2><p class="text-sm text-gray-400 mt-1">Distribute gated digital items straight to your public storefront layout lines.</p></div>
+                        <button onclick="openProductModal()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 text-white font-medium px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-box-open"></i> Add Lead Magnet</button>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Product Resource Title</th><th class="pb-3">Store Listing Price</th><th class="pb-3 text-right">Actions</th></tr></thead><tbody id="products-table-body" class="divide-y divide-gray-800 text-sm"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+                        <div><h2 class="text-xl font-bold text-white">Live Instagram Automation Feed</h2><p class="text-sm text-gray-400 mt-1">Real-time webhook analytics telemetry streams logging triggered keywords.</p></div>
+                        <div class="flex gap-2">
+                            <button onclick="simulateInstaComment()" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 text-white text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer shadow-lg shadow-purple-500/20"><i class="fa-brands fa-instagram mr-1"></i> Simulate Insta Comment</button>
+                            <button onclick="clearAutomationLogs()" class="bg-gray-900 hover:bg-gray-800 border border-gray-800 text-red-400 text-xs font-semibold px-4 py-2 rounded-lg transition cursor-pointer"><i class="fa-solid fa-broom mr-1"></i> Clear</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Events Logs Timestamp</th><th class="pb-3">Follower Identifier</th><th class="pb-3">Trigger Word</th><th class="pb-3 text-right">System Status</th></tr></thead><tbody id="automation-logs-body" class="divide-y divide-gray-800 text-xs font-mono text-slate-400"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+                        <div><h2 class="text-xl font-bold text-white">Instagram Keyword Rules</h2><p class="text-sm text-gray-400 mt-1">Manage trigger configurations for automated DM responses.</p></div>
+                        <button onclick="openKeywordModal()" class="bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 hover:opacity-90 text-white font-medium px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Add New Rule</button>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Trigger Keyword</th><th class="pb-3">Automated Response Text</th><th class="pb-3 text-right">Actions</th></tr></thead><tbody id="rules-table-body" class="divide-y divide-gray-800 text-sm"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+                        <div><h2 class="text-xl font-bold text-white">Link-in-Bio Buttons Manager</h2><p class="text-sm text-gray-400 mt-1">Configure live destination buttons displayed on your public bio landing page.</p></div>
+                        <button onclick="openLinkModal()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:opacity-90 text-white font-medium px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"><i class="fa-solid fa-plus"></i> Add New Link Button</button>
+                    </div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Button Title</th><th class="pb-3">Target Destination URL</th><th class="pb-3 text-right">Actions</th></tr></thead><tbody id="bio-links-table-body" class="divide-y divide-gray-800 text-sm"></tbody></table></div>
+                </div>
+
+                <div class="bg-gray-950 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
+                    <div><h2 class="text-xl font-bold text-white">Captured Email Leads Pipeline</h2><p class="text-sm text-gray-400 mt-1">Review user subscribers captured directly from your bio link newsletter box.</p></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse"><thead><tr class="border-b border-gray-800 text-gray-400 text-sm font-medium"><th class="pb-3">Subscriber Email Address</th><th class="pb-3">Capture Date & Timestamp</th><th class="pb-3 text-right">Actions</th></tr></thead><tbody id="leads-table-body" class="divide-y divide-gray-800 text-sm"></tbody></table></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="pricing-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-indigo-500/30 w-full max-w-3xl rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-indigo-600/20 blur-3xl"></div>
+            
+            <div class="flex justify-between items-center mb-6 relative z-10">
+                <h3 class="text-2xl font-black text-white">Upgrade to LinkKitHub <span class="text-indigo-400">PRO</span></h3>
+                <button onclick="closePricingModal()" class="text-gray-400 hover:text-white cursor-pointer transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="flex justify-center mb-8 relative z-10">
+                <div class="bg-gray-950 p-1 rounded-lg border border-gray-800 flex text-sm">
+                    <button id="btn-monthly" onclick="toggleBillingCycle('monthly')" class="px-5 py-2 rounded-md bg-indigo-600 text-white font-bold transition shadow-sm cursor-pointer">Monthly</button>
+                    <button id="btn-yearly" onclick="toggleBillingCycle('yearly')" class="px-5 py-2 rounded-md text-gray-400 hover:text-white font-bold transition cursor-pointer">Yearly (-20%)</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                <div class="bg-gray-950 border border-gray-800 rounded-xl p-6 opacity-70">
+                    <span class="bg-gray-800 text-gray-300 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Current Plan</span>
+                    <h4 class="text-xl font-bold mt-3 text-white">Free Tier</h4>
+                    <p class="text-3xl font-black my-2">$0 <span class="text-sm font-normal text-gray-500">/ forever</span></p>
+                    <ul class="text-sm text-gray-400 space-y-3 mt-6">
+                        <li><i class="fa-solid fa-check text-gray-600 mr-2"></i> Standard Bio Link Buttons</li>
+                        <li><i class="fa-solid fa-check text-gray-600 mr-2"></i> Newsletter Lead Capture</li>
+                        <li><i class="fa-solid fa-xmark text-red-900/80 mr-2"></i> No Advanced Analytics</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-indigo-950/20 border-2 border-indigo-500 rounded-xl p-6 relative">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Recommended</span>
+                    <h4 class="text-xl font-bold mt-2 text-indigo-100">Pro Creator</h4>
+                    
+                    <p id="dynamic-pro-price" class="text-3xl font-black my-2 text-white">
+                        <i class="fa-solid fa-circle-notch fa-spin text-lg text-indigo-400"></i>
+                    </p>
+                    
+                    <ul class="text-sm text-indigo-100 space-y-3 mt-6 mb-8 font-medium">
+                        <li><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Interactive 7-Days Analytics</li>
+                        <li><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> White-Label Custom Domain</li>
+                        <li><i class="fa-solid fa-circle-check text-emerald-400 mr-2"></i> Advanced Design Customizer</li>
+                    </ul>
+                    
+                    <button id="dynamic-pay-btn" onclick="confirmUpgradePayment(event)" class="w-full bg-gray-800 text-gray-400 font-bold py-3.5 rounded-xl transition flex justify-center items-center gap-2 cursor-wait" disabled>
+                        Loading Secure Checkout...
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rule-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-950 border border-gray-800 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Create New Automation Rule</h3><button onclick="closeKeywordModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
+            <form onsubmit="saveInstagramRule(event)" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">When user sends keyword:</label><input id="modal-keyword-input" type="text" placeholder="e.g., price" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">Trigger response text:</label><textarea id="modal-reply-input" rows="3" placeholder="Type response text..." class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></textarea></div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-md cursor-pointer">Save Automation Rule</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="link-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-950 border border-gray-800 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Create Link-in-Bio Button</h3><button type="button" onclick="closeLinkModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
+            <form onsubmit="saveBioLinkRule(event)" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">Button Display Text:</label><input id="modal-link-title" type="text" placeholder="Join My Telegram Channel 💬" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">Destination URL:</label><input id="modal-link-url" type="url" placeholder="https://..." class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg shadow-md cursor-pointer">Publish Live Button</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="product-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-950 border border-gray-800 w-full max-w-md rounded-xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Publish Gated Product Magnet</h3><button type="button" onclick="closeProductModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
+            <form onsubmit="saveDigitalProduct(event)" class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">Resource Title:</label><input id="modal-product-title" type="text" placeholder="Free Growth Checklist 🎁" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">Download URL:</label><input id="modal-product-url" type="url" placeholder="https://..." class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></div>
+                <div><label class="block text-sm font-semibold text-emerald-400 mb-1">Listing Store Price ($ USD):</label><input id="modal-product-price" type="number" step="0.01" value="19.00" class="w-full bg-gray-900 border border-emerald-900/40 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 transition font-mono font-bold" required></div>
+                <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2.5 rounded-xl text-sm shadow-md cursor-pointer">Publish Asset Magnet</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000";
+        
+        const userId = localStorage.getItem('user_id');
+        const username = localStorage.getItem('username');
+
+        let performanceChartInstance = null;
+
+        if(!userId || !username) { window.location.href = "login.html"; } 
+        else { document.getElementById('creator-identity-tag').innerText = `@${username} 🚀`; }
+
+        function handleLogout() { 
+            localStorage.clear(); 
+            window.location.href = "index.html"; 
+        }
+        function launchPublicBioPage() { window.open(`bio.html?c=${username}`, '_blank'); }
+        
+        function openKeywordModal() { document.getElementById('rule-modal').classList.remove('hidden'); }
+        function closeKeywordModal() { document.getElementById('rule-modal').classList.add('hidden'); document.getElementById('modal-keyword-input').value = ''; document.getElementById('modal-reply-input').value = ''; }
+        function openLinkModal() { const el = document.getElementById('link-modal'); if(el) { el.classList.remove('hidden'); el.classList.add('flex'); } }
+        function closeLinkModal() { const el = document.getElementById('link-modal'); if(el) { el.classList.add('hidden'); el.classList.remove('flex'); } document.getElementById('modal-link-title').value = ''; document.getElementById('modal-link-url').value = ''; }
+        function openProductModal() { const el = document.getElementById('product-modal'); if(el) { el.classList.remove('hidden'); el.classList.add('flex'); } }
+        function closeProductModal() { const el = document.getElementById('product-modal'); if(el) { el.classList.add('hidden'); el.classList.remove('flex'); } document.getElementById('modal-product-title').value = ''; document.getElementById('modal-product-url').value = ''; document.getElementById('modal-product-price').value = '19.00'; }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeKeywordModal(); closeLinkModal(); closeProductModal(); closePricingModal(); } });
+
+        // ==========================================
+        // [PART-11: JS SMART IP & PRICING LOGIC]
+        // ==========================================
+        let detectedGateway = "stripe"; 
+        let currentBillingCycle = "monthly";
+        let userCountry = "US"; 
+
+        function toggleBillingCycle(cycle) {
+            currentBillingCycle = cycle;
+            document.getElementById('btn-monthly').className = cycle === 'monthly' ? "px-5 py-2 rounded-md bg-indigo-600 text-white font-bold transition shadow-sm cursor-pointer" : "px-5 py-2 rounded-md text-gray-400 hover:text-white font-bold transition cursor-pointer";
+            document.getElementById('btn-yearly').className = cycle === 'yearly' ? "px-5 py-2 rounded-md bg-indigo-600 text-white font-bold transition shadow-sm cursor-pointer" : "px-5 py-2 rounded-md text-gray-400 hover:text-white font-bold transition cursor-pointer";
+            updatePricingDisplay();
+        }
+
+        async function upgradeToPro() {
+            const el = document.getElementById('pricing-modal');
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+            
+            try {
+                const response = await fetch('https://get.geojs.io/v1/ip/country.json');
+                const data = await response.json();
+                userCountry = data.country;
+            } catch (error) {
+                userCountry = "US";
+            }
+            updatePricingDisplay();
+        }
+
+        function updatePricingDisplay() {
+            const priceEl = document.getElementById('dynamic-pro-price');
+            const btnEl = document.getElementById('dynamic-pay-btn');
+            
+            if (userCountry === 'IN') {
+                detectedGateway = "razorpay";
+                if(currentBillingCycle === 'monthly') {
+                    priceEl.innerHTML = '₹1499 <span class="text-sm font-normal text-indigo-300">/ month</span>';
+                } else {
+                    priceEl.innerHTML = '₹14,999 <span class="text-sm font-normal text-emerald-400">/ year</span>';
+                }
+                btnEl.innerHTML = '<i class="fa-solid fa-lock text-xs"></i> Pay';
+                btnEl.className = "w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition cursor-pointer transform active:scale-95";
+            } else {
+                detectedGateway = "stripe";
+                if(currentBillingCycle === 'monthly') {
+                    priceEl.innerHTML = '$19 <span class="text-sm font-normal text-indigo-300">/ month</span>';
+                } else {
+                    priceEl.innerHTML = '$190 <span class="text-sm font-normal text-emerald-400">/ year</span>';
+                }
+                btnEl.innerHTML = '<i class="fa-solid fa-lock text-xs"></i> Pay';
+                btnEl.className = "w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition cursor-pointer transform active:scale-95";
+            }
+            btnEl.disabled = false;
+        }
+
+        function closePricingModal() {
+            const el = document.getElementById('pricing-modal');
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+
+        async function confirmUpgradePayment(event) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Connecting to ${detectedGateway === 'razorpay' ? 'Razorpay' : 'Stripe'}...`;
+            btn.disabled = true;
+            
+            try {
+                await new Promise(r => setTimeout(r, 2000)); 
+                const res = await fetch(`${BACKEND_URL}/api/subscription/upgrade?user_id=${userId}`, { method: 'POST' });
+                if(res.ok) { 
+                    localStorage.setItem('plan', 'pro'); 
+                    alert(`🎉 Secured via ${detectedGateway.toUpperCase()}! Welcome to LinkKitHub PRO.`);
+                    location.reload(); 
+                } else {
+                    throw new Error("API failed");
+                }
+            } catch(e) {
+                alert("Payment Gateway Error. Please try again.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // [PART-12: JS FETCH DATA & CRUD OPERATIONS]
+        // ==========================================
+        async function fetchAnalytics() {
+            try {
+                const pResponse = await fetch(`${BACKEND_URL}/api/profile?user_id=${userId}`);
+                if(pResponse.ok) {
+                    const profileData = await pResponse.json();
+                    document.getElementById('profile-username-input').value = profileData.username;
+                    document.getElementById('profile-title-input').value = profileData.bio_title;
+                    document.getElementById('profile-desc-input').value = profileData.bio_desc;
+                    document.getElementById('profile-avatar-input').value = profileData.avatar_url;
+                    if(profileData.theme) document.getElementById('profile-theme-input').value = profileData.theme;
+                    document.getElementById('profile-rate-input').value = profileData.consultation_price || 49.00;
+                    if(profileData.button_style) document.getElementById('profile-button-style-input').value = profileData.button_style;
+                    if(profileData.font_family) document.getElementById('profile-font-input').value = profileData.font_family;
+                }
+            } catch(e) { console.error(e); }
+
+            try {
+                const domResponse = await fetch(`${BACKEND_URL}/api/domain?user_id=${userId}`);
+                if(domResponse.ok) {
+                    const domData = await domResponse.json();
+                    document.getElementById('domain-input').value = domData.custom_domain || "";
+                }
+            } catch(e) { console.error(e); }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/analytics?user_id=${userId}`);
+                if(response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('total-clicks-counter').innerText = data.total_clicks;
+                    document.getElementById('lead-captures-counter').innerText = data.lead_captures;
+                    document.getElementById('total-revenue-counter').innerText = `$${data.total_revenue.toFixed(2)}`;
+                    
+                    if(performanceChartInstance) { performanceChartInstance.destroy(); }
+                    const chartContext = document.getElementById('performanceChart').getContext('2d');
+                    performanceChartInstance = new Chart(chartContext, {
+                        type: 'line',
+                        data: {
+                            labels: data.chart_data.labels,
+                            datasets: [
+                                { label: 'Traffic Link Clicks 📈', data: data.chart_data.clicks, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.05)', tension: 0.35, fill: true, yAxisID: 'y' },
+                                { label: 'Revenue Earned ($ USD) 💰', data: data.chart_data.revenue, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)', tension: 0.35, fill: true, yAxisID: 'y1' }
+                            ]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            scales: {
+                                x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#94a3b8' } },
+                                y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#94a3b8' } },
+                                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#10b981' } }
+                            },
+                            plugins: { legend: { labels: { color: '#f8fafc', font: { weight: 'bold' } } } }
+                        }
+                    });
+
+                    const rBody = document.getElementById('rules-table-body');
+                    if(rBody) {
+                        rBody.innerHTML = '';
+                        data.active_rules.forEach(rule => {
+                            const row = document.createElement('tr'); row.className = 'border-b border-gray-800/50 hover:bg-gray-800/20 transition';
+                            row.innerHTML = `<td class="py-4 font-mono text-pink-400 font-semibold uppercase text-xs"><span class="bg-pink-500/10 px-2 py-1 border border-pink-500/20 rounded-md">${rule.keyword}</span></td><td class="py-4 text-gray-300 max-w-md truncate">${rule.reply_text}</td><td class="py-4 text-right"><button onclick="deleteRule('${rule.keyword}')" class="text-red-500 hover:text-red-400 cursor-pointer p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                            rBody.appendChild(row);
+                        });
+                    }
+
+                    const bookingsBody = document.getElementById('bookings-table-body');
+                    if(bookingsBody) {
+                        bookingsBody.innerHTML = '';
+                        if(!data.active_bookings || data.active_bookings.length === 0) {
+                            bookingsBody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-500 text-xs font-mono">No upcoming slots structured.</td></tr>`;
+                        } else {
+                            data.active_bookings.forEach(b => {
+                                const row = document.createElement('tr'); row.className = 'border-b border-gray-800/50 hover:bg-gray-800/20 transition';
+                                row.innerHTML = `<td class="py-4 font-medium text-gray-200">${b.name}</td><td class="py-4 text-gray-400 font-mono text-xs">${b.email}</td><td class="py-4 text-indigo-400 font-semibold font-mono text-xs">${b.date}</td><td class="py-4 text-emerald-400 font-semibold font-mono text-xs"><span class="bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded-md">${b.time}</span></td><td class="py-4 text-right"><button onclick="cancelAppointment(${b.id}, '${b.name}')" class="text-red-500 hover:text-red-400 cursor-pointer p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                                bookingsBody.appendChild(row);
+                            });
+                        }
+                    }
+
+                    const salesBody = document.getElementById('sales-table-body');
+                    if(salesBody) {
+                        salesBody.innerHTML = '';
+                        if(!data.recent_sales || data.recent_sales.length === 0) {
+                            salesBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-gray-500 text-xs font-mono">No checkout invoices logs.</td></tr>`;
+                        } else {
+                            data.recent_sales.forEach(sale => {
+                                const row = document.createElement('tr'); row.className = 'border-b border-gray-800/50 hover:bg-gray-800/20 transition';
+                                row.innerHTML = `<td class="py-4 text-slate-500 font-mono text-xs">${new Date(sale.date).toLocaleString()}</td><td class="py-4 font-medium text-gray-300">${sale.email}</td><td class="py-4 text-gray-400"><span class="bg-gray-900 px-2 py-1 rounded border border-gray-800 text-xs mr-2 text-slate-400 font-bold uppercase">${sale.type}</span> ${sale.title}</td><td class="py-4 text-right font-extrabold text-emerald-400 font-mono">+$${sale.amount.toFixed(2)}</td>`;
+                                salesBody.appendChild(row);
+                            });
+                        }
+                    }
+
+                    const emailBody = document.getElementById('email-logs-body');
+                    if(emailBody) {
+                        emailBody.innerHTML = '';
+                        if(!data.outbound_emails || data.outbound_emails.length === 0) {
+                            emailBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-gray-500 text-xs font-mono">No active outgoing email dispatches logged.</td></tr>`;
+                        } else {
+                            data.outbound_emails.forEach(mail => {
+                                const row = document.createElement('tr'); row.className = 'border-b border-gray-800/30 hover:bg-gray-800/20 transition text-slate-400';
+                                row.innerHTML = `<td class="py-3 text-slate-500">${new Date(mail.date).toLocaleString()}</td><td class="py-3 text-indigo-300 font-semibold">${mail.recipient}</td><td class="py-3 text-gray-300 max-w-xs truncate">${mail.subject}</td><td class="py-3 text-right text-cyan-400 font-bold"><i class="fa-solid fa-paper-plane mr-1 text-[10px]"></i> Sent (Simulated)</td>`;
+                                emailBody.appendChild(row);
+                            });
+                        }
+                    }
+
+                    const prodBody = document.getElementById('products-table-body');
+                    if(prodBody) {
+                        prodBody.innerHTML = '';
+                        if(!data.stored_products || data.stored_products.length === 0) {
+                            prodBody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-gray-500 text-xs font-mono">No products published.</td></tr>`;
+                        } else {
+                            data.stored_products.forEach(p => {
+                                const row = document.createElement('tr'); row.className = 'border-b border-gray-800/50 hover:bg-gray-800/20 transition';
+                                row.innerHTML = `<td class="py-4 font-semibold text-cyan-400">${p.title}</td><td class="py-4 text-emerald-400 font-mono font-bold text-xs">$${p.price.toFixed(2)}</td><td class="py-4 text-right"><button onclick="deleteProduct(${p.id}, '${encodeURIComponent(p.title)}')" class="text-red-500 hover:text-red-400 cursor-pointer p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                                prodBody.appendChild(row);
+                            });
+                        }
+                    }
+
+                    const logsBody = document.getElementById('automation-logs-body');
+                    if(logsBody) {
+                        logsBody.innerHTML = '';
+                        if(!data.automation_logs || data.automation_logs.length === 0) {
+                            logsBody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-gray-500 text-xs font-mono">No active automation logs.</td></tr>`;
+                        } else {
+                            data.automation_logs.forEach(log => {
+                                const row = document.createElement('tr'); row.className = 'border-b border-gray-800/30 hover:bg-gray-800/20 transition text-slate-400';
+                                row.innerHTML = `<td class="py-3 text-slate-500">${new Date(log.date).toLocaleString()}</td><td class="py-3 text-gray-300">USER_ID: <span class="text-indigo-400 font-semibold">${log.sender_id}</span></td><td class="py-3"><span class="bg-pink-500/10 px-1.5 py-0.5 border border-pink-500/20 text-pink-400 rounded text-[11px] font-semibold uppercase">${log.keyword}</span></td><td class="py-3 text-right text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i>Dispatched</td>`;
+                                logsBody.appendChild(row);
+                            });
+                        }
+                    }
+
+                    const leadsBody = document.getElementById('leads-table-body');
+                    if(leadsBody) {
+                        leadsBody.innerHTML = '';
+                        if(!data.captured_emails || data.captured_emails.length === 0) {
+                            leadsBody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-gray-500 text-xs font-mono">No subscriber email leads logs.</td></tr>`;
+                        } else {
+                            data.captured_emails.forEach(lead => {
+                                const row = document.createElement('tr'); row.className = 'border-b border-gray-800/50 hover:bg-gray-800/20 transition';
+                                row.innerHTML = `<td class="py-4 font-medium text-gray-200">${lead.email}</td><td class="py-4 text-gray-400 font-mono text-xs">${new Date(lead.date).toLocaleString()}</td><td class="py-4 text-right"><button onclick="deleteLead('${lead.email}')" class="text-red-500 hover:text-red-400 cursor-pointer p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                                leadsBody.appendChild(row);
+                            });
+                        }
+                    }
+                }
+            } catch(e) { console.error(e); }
+
+            try {
+                const linkResponse = await fetch(`${BACKEND_URL}/api/public-links?username=${username}`);
+                if(linkResponse.ok) {
+                    const linksData = await linkResponse.json();
+                    const lBody = document.getElementById('bio-links-table-body');
+                    if(lBody) {
+                        lBody.innerHTML = ''; 
+                        linksData.forEach(link => {
+                            const row = document.createElement('tr'); row.className = 'border-b border-gray-800/50 hover:bg-gray-800/20 transition';
+                            row.innerHTML = `<td class="py-4 font-semibold text-emerald-400 flex items-center gap-2">${link.title}<span class="bg-indigo-500/15 text-indigo-400 px-2 py-0.5 border border-indigo-500/30 rounded text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-chart-simple text-[10px]"></i> ${link.clicks} clicks</span></td><td class="py-4 text-gray-400 font-mono text-xs"><a href="${link.url}" target="_blank" class="hover:underline text-indigo-400">${link.url}</a></td><td class="py-4 text-right"><button onclick="deleteLink('${encodeURIComponent(link.title)}')" class="text-red-500 hover:text-red-400 cursor-pointer p-1.5 transition"><i class="fa-solid fa-trash-can"></i></button></td>`;
+                            lBody.appendChild(row);
+                        });
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function connectCustomDomain(event) {
+            event.preventDefault();
+            const domInput = document.getElementById('domain-input').value;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/domain`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: parseInt(userId), custom_domain: domInput }) });
+                if(response.ok) { alert("Success! White-label domain configuration mapped smoothly."); fetchAnalytics(); }
+                else { const err = await response.json(); alert("Domain Error: " + err.detail); }
+            } catch(e) { alert("Error linking custom host router."); }
+        }
+
+        async function disconnectCustomDomain() {
+            if(!confirm("Disconnect your white-label brand domain name from LinkKitHub?")) return;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/domain/${userId}`, { method: 'DELETE' });
+                if(response.ok) { document.getElementById('domain-input').value = ""; fetchAnalytics(); alert("Domain unlinked."); }
+            } catch(e) { console.error(e); }
+        }
+
+        async function saveProfileSettings(event) {
+            event.preventDefault();
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/profile`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId), username: document.getElementById('profile-username-input').value,
+                        bio_title: document.getElementById('profile-title-input').value, bio_desc: document.getElementById('profile-desc-input').value,
+                        avatar_url: document.getElementById('profile-avatar-input').value, theme: document.getElementById('profile-theme-input').value,
+                        consultation_price: parseFloat(document.getElementById('profile-rate-input').value),
+                        button_style: document.getElementById('profile-button-style-input').value,
+                        font_family: document.getElementById('profile-font-input').value 
+                    })
+                });
+                if(response.ok) { alert("Success! Profile updated live."); fetchAnalytics(); }
+            } catch (e) { alert("Error saving configurations."); }
+        }
+
+        async function saveDigitalProduct(event) {
+            event.preventDefault();
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/products`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: parseInt(userId), title: document.getElementById('modal-product-title').value, download_url: document.getElementById('modal-product-url').value, price: parseFloat(document.getElementById('modal-product-price').value) }) });
+                if(response.ok) { closeProductModal(); fetchAnalytics(); alert("Success! Product online."); }
+            } catch (e) { alert("Error publishing asset."); }
+        }
+
+        async function saveInstagramRule(event) {
+            event.preventDefault();
+            try { const response = await fetch(`${BACKEND_URL}/api/rules`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: parseInt(userId), keyword: document.getElementById('modal-keyword-input').value, reply_text: document.getElementById('modal-reply-input').value }) }); if(response.ok) { closeKeywordModal(); fetchAnalytics(); alert("Success! Automation rule saved."); } } catch (e) { alert("Error saving rule."); }
+        }
+
+        async function saveBioLinkRule(event) {
+            event.preventDefault();
+            try { const response = await fetch(`${BACKEND_URL}/api/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: parseInt(userId), title: document.getElementById('modal-link-title').value, url: document.getElementById('modal-link-url').value }) }); if(response.ok) { closeLinkModal(); fetchAnalytics(); alert("Success! Button has been published live."); } } catch (e) { alert("Error publishing link."); }
+        }
+
+        async function deleteRule(keyword) {
+            if (!confirm(`Delete rule "${keyword}"?`)) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/rules/${userId}/${keyword}`, { method: 'DELETE' }); if (response.ok) fetchAnalytics(); } catch (e) { console.error(e); }
+        }
+
+        async function deleteLink(encodedTitle) {
+            const title = decodeURIComponent(encodedTitle); if (!confirm(`Remove button "${title}"?`)) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/links?user_id=${userId}&title=${encodeURIComponent(title)}`, { method: 'DELETE' }); if (response.ok) fetchAnalytics(); } catch (e) { console.error(e); }
+        }
+
+        async function deleteProduct(id, encodedTitle) {
+            const title = decodeURIComponent(encodedTitle); if (!confirm(`Delete product "${title}"?`)) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/products/${userId}/${id}`, { method: 'DELETE' }); if(response.ok) fetchAnalytics(); } catch(e) { console.error(e); }
+        }
+
+        async function cancelAppointment(id, clientName) {
+            if (!confirm(`Cancel appointment for "${clientName}"?`)) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/bookings/${userId}/${id}`, { method: 'DELETE' }); if(response.ok) fetchAnalytics(); } catch (e) { console.error(e); }
+        }
+
+        async function deleteLead(email) {
+            if (!confirm(`Delete subscriber "${email}"?`)) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/leads/${userId}/${email}`, { method: 'DELETE' }); if (response.ok) fetchAnalytics(); } catch (e) { console.error(e); }
+        }
+
+        async function clearAutomationLogs() {
+            if (!confirm("Clear activity history?")) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/automation-logs/clear?user_id=${userId}`, { method: 'DELETE' }); if(response.ok) fetchAnalytics(); } catch(e) { console.error(e); }
+        }
+
+        async function clearEmailLogs() {
+            if (!confirm("Clear dispatcher history?")) return;
+            try { const response = await fetch(`${BACKEND_URL}/api/email-logs/clear?user_id=${userId}`, { method: 'DELETE' }); if(response.ok) fetchAnalytics(); } catch(e) { console.error(e); }
+        }
+
+        // 🤖 INSTAGRAM SIMULATOR LOGIC
+        async function simulateInstaComment() {
+            const testKeyword = prompt("🤖 Insta Simulator: Fake follower kya comment karega? (e.g., 'price', 'link', 'course'):", "link");
+            if (!testKeyword) return;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/simulate-insta-comment`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, follower_id: "insta_user_" + Math.floor(Math.random() * 9999), comment_text: `Hey! Can you send me the ${testKeyword} please? 😍` })
+                });
+                const data = await response.json();
+                if (data.status === "SUCCESS") {
+                    alert(`✅ AUTO-DM DISPATCHED!\n\n💬 Follower Commented: "...${testKeyword}..."\n🚀 System Auto-Replied: "${data.message_delivered}"`);
+                    fetchAnalytics(); 
+                } else {
+                    alert(`ℹ️ NO ACTION TAKEN.\n\nSystem checked the comment for "${testKeyword}" but no matching automation rule was found. Rule create karo pehle!`);
+                }
+            } catch (e) { alert("Server Error! Check if backend is running."); }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { if(userId && username) fetchAnalytics(); });
+    </script>
+</body>
+</html>

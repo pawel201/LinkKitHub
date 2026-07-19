@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkKitHub | The Ultimate Creator Operating System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero-glow {
+            position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%);
+            top: -200px; left: 50%; transform: translateX(-50%); z-index: 0; pointer-events: none;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-[#020617] text-slate-200 font-sans antialiased relative overflow-x-hidden">
+
+    <div class="hero-glow"></div>
+
+    <nav class="fixed w-full top-0 z-50 bg-[#020617]/80 backdrop-blur-md border-b border-slate-800/50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid fa-link text-white text-sm"></i>
+                </div>
+                <span class="text-xl font-black tracking-tight text-white">Link<span class="text-indigo-400">KitHub</span></span>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-400">
+                <a href="#features" class="hover:text-white transition">Features</a>
+                <a href="#about" class="hover:text-white transition">About Us</a>
+                <a href="#pricing" class="hover:text-indigo-400 transition">Pricing</a>
+            </div>
+
+            <div id="auth-buttons" class="flex items-center space-x-4">
+                <a href="login.html" class="text-sm font-bold text-slate-300 hover:text-white transition">Log in</a>
+                <a href="login.html" class="bg-white text-slate-950 hover:bg-slate-200 px-5 py-2.5 rounded-xl text-sm font-black transition transform active:scale-95">Get Started Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative pt-40 pb-20 px-6 lg:px-8 text-center max-w-5xl mx-auto z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-bold uppercase tracking-widest mb-8">
+            <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span></span>
+            LinkKitHub V2.0 is Live
+        </div>
+        <h1 class="text-5xl md:text-7xl font-black text-white tracking-tight leading-tight mb-6">
+            Monetize your audience. <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">All in one single link.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 font-medium">
+            Replace Linktree, Calendly, and Gumroad with one powerful operating system designed exclusively for top-tier creators.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="login.html" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl text-lg font-black transition shadow-xl shadow-indigo-600/20 transform hover:-translate-y-1">Start your 14-day free trial</a>
+            <a href="#features" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white px-8 py-4 rounded-2xl text-lg font-bold transition">View Features</a>
+        </div>
+    </section>
+
+    <section id="features" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-black text-white mb-4">Everything you need to scale</h2>
+                <p class="text-slate-400">Stop paying for 5 different subscriptions. We combined them all.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="glass-card p-8 rounded-3xl transform transition hover:-translate-y-1 hover:border-indigo-500/50 group">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-link text-blue-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Bio Link Builder</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Create a stunning mobile-optimized landing page in seconds. Connect your audience to your best content.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl transform transition hover:-translate-y-1 hover:border-emerald-500/50 group">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <i class="fa-regular fa-calendar-check text-emerald-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">1:1 Consultancy Booking</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">Let fans and brands book paid meetings directly on your profile. Auto-synced payments included.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl transform transition hover:-translate-y-1 hover:border-pink-500/50 group">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-robot text-pink-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Instagram Automation</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">"Comment LINK to get the DM!" Automate your sales funnel directly from your Instagram reels.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="py-24 bg-[#050B1A] border-y border-slate-800/50">
+        <div class="max-w-4xl mx-auto px-6 text-center space-y-6">
+            <h2 class="text-3xl font-black text-white">Built by Creators, For Creators.</h2>
+            <p class="text-slate-400 text-lg leading-relaxed">
+                We got tired of duck-taping multiple tools together. Paying $15 for link-in-bio, $12 for bookings, and $30 for automation just didn't make sense. So we built LinkKitHub. One unified dashboard to run your entire creator business, giving you back your time to do what you do best: <strong>Create.</strong>
+            </p>
+        </div>
+    </section>
+
+    <section id="pricing" class="py-24 relative z-10">
+        <div class="max-w-5xl mx-auto px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-black text-white mb-4">Simple, transparent pricing</h2>
+                <p class="text-slate-400">Start for free, upgrade when you need superpowers.</p>
+            </div>
+
+            <div class="flex justify-center mb-12 relative z-10">
+                <div class="bg-slate-900 p-1.5 rounded-2xl border border-slate-800 flex text-sm shadow-xl">
+                    <button id="btn-monthly-landing" onclick="toggleLandingPlan('monthly')" class="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition shadow-sm cursor-pointer">Monthly</button>
+                    <button id="btn-yearly-landing" onclick="toggleLandingPlan('yearly')" class="px-6 py-2.5 rounded-xl text-slate-400 hover:text-white font-bold transition cursor-pointer">Yearly (-20%)</button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="glass-card p-8 md:p-10 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <span class="bg-slate-800 text-slate-300 text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">Hobbyist</span>
+                        <h3 class="text-2xl font-bold text-white mt-4">Free Tier</h3>
+                        <div class="mt-4 flex items-baseline text-5xl font-black text-white">
+                            $0 <span class="text-lg text-slate-500 font-medium ml-2">/forever</span>
+                        </div>
+                        <ul class="mt-8 space-y-4 text-sm text-slate-300 font-medium">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-emerald-500"></i> Standard Bio Link Page</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-emerald-500"></i> Newsletter Email Capture</li>
+                            <li class="flex items-center gap-3 text-slate-600"><i class="fa-solid fa-xmark"></i> No Analytics Charts</li>
+                            <li class="flex items-center gap-3 text-slate-600"><i class="fa-solid fa-xmark"></i> LinkKitHub Branding</li>
+                        </ul>
+                    </div>
+                    <a href="login.html" class="mt-10 block w-full text-center bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 rounded-xl transition">Start for Free</a>
+                </div>
+
+                <div class="bg-gradient-to-b from-indigo-900/40 to-slate-900 border-2 border-indigo-500 p-8 md:p-10 rounded-3xl flex flex-col justify-between relative transform md:-translate-y-4 shadow-2xl shadow-indigo-500/10">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <span class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">Most Popular</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-indigo-100 mt-2">Pro Creator</h3>
+                        
+                        <div id="landing-pro-price" class="mt-4 flex items-baseline text-5xl font-black text-white">
+                            <i class="fa-solid fa-circle-notch fa-spin text-2xl text-indigo-400"></i>
+                        </div>
+
+                        <ul class="mt-8 space-y-4 text-sm text-indigo-100 font-medium">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Everything in Free</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Interactive Traffic Analytics</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Connect Custom Domain</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-circle-check text-emerald-400"></i> Remove Platform Branding</li>
+                        </ul>
+                    </div>
+                    <a href="login.html" class="mt-10 block w-full text-center bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl shadow-lg shadow-indigo-600/30 transition transform active:scale-95">Upgrade to Pro</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-slate-800/50 bg-[#020617] py-10 mt-10">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <i class="fa-solid fa-link text-indigo-500"></i>
+                <span class="text-lg font-black tracking-tight text-white">LinkKitHub</span>
+            </div>
+            <p class="text-slate-500 text-xs font-medium">&copy; 2026 LinkKitHub Inc. All rights reserved. Built for creators.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 1. SMART PRICING LOGIC
+        let isYearly = false;
+        let userLocation = "US"; // Default
+
+        async function fetchLocationAndUpdatePrice() {
+            try {
+                const res = await fetch('https://get.geojs.io/v1/ip/country.json');
+                const data = await res.json();
+                userLocation = data.country;
+            } catch(e) {
+                userLocation = "US";
+            }
+            updateLandingPrice();
+        }
+
+        function toggleLandingPlan(plan) {
+            isYearly = (plan === 'yearly');
+            document.getElementById('btn-monthly-landing').className = !isYearly 
+                ? "px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition shadow-sm cursor-pointer" 
+                : "px-6 py-2.5 rounded-xl text-slate-400 hover:text-white font-bold transition cursor-pointer";
+            document.getElementById('btn-yearly-landing').className = isYearly 
+                ? "px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold transition shadow-sm cursor-pointer" 
+                : "px-6 py-2.5 rounded-xl text-slate-400 hover:text-white font-bold transition cursor-pointer";
+            
+            updateLandingPrice();
+        }
+
+        function updateLandingPrice() {
+            const priceEl = document.getElementById('landing-pro-price');
+            if(userLocation === 'IN') {
+                if(isYearly) priceEl.innerHTML = '₹14,999 <span class="text-lg text-emerald-400 font-medium ml-2">/year</span>';
+                else priceEl.innerHTML = '₹1499 <span class="text-lg text-indigo-300 font-medium ml-2">/month</span>';
+            } else {
+                if(isYearly) priceEl.innerHTML = '$190 <span class="text-lg text-emerald-400 font-medium ml-2">/year</span>';
+                else priceEl.innerHTML = '$19 <span class="text-lg text-indigo-300 font-medium ml-2">/month</span>';
+            }
+        }
+
+        // 2. LOGGED-IN STATE DETECTION
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchLocationAndUpdatePrice(); // Fetch IP on load
+
+            const savedUsername = localStorage.getItem("username");
+            if (savedUsername) {
+                const authContainer = document.getElementById("auth-buttons");
+                authContainer.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="hidden sm:flex items-center gap-2 bg-slate-800/60 px-3 py-1.5 rounded-full border border-slate-700/50">
+                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-xs font-black text-white uppercase shadow-sm">
+                                ${savedUsername.charAt(0)}
+                            </div>
+                            <span class="text-xs font-bold text-slate-200">@${savedUsername}</span>
+                        </div>
+                        <a href="dashboard.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-black transition shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+                            Dashboard <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

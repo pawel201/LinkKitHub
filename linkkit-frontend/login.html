@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkKitHub - Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-950 text-white font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-500 mb-4">
+                <i class="fa-solid fa-circle-nodes text-2xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold tracking-wider" id="form-title">Welcome Back</h2>
+            <p class="text-sm text-gray-400 mt-1" id="form-subtitle">Enter your credentials to access the console.</p>
+        </div>
+
+        <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-5 block">
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Username</label>
+                <input id="login-user" type="text" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
+                <input id="login-pass" type="password" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-900/20">Sign In</button>
+            <p class="text-center text-sm text-gray-400 mt-4">Don't have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Sign Up</span></p>
+        </form>
+
+        <form id="signup-form" onsubmit="handleAuth(event, 'signup')" class="space-y-5 hidden">
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Choose Username</label>
+                <input id="signup-user" type="text" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Email Address</label>
+                <input id="signup-email" type="email" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
+                <input id="signup-pass" type="password" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-emerald-900/20">Create Free Account</button>
+            <p class="text-center text-sm text-gray-400 mt-4">Already have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Sign In</span></p>
+        </form>
+
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000";
+
+        // If already logged in, skip to dashboard
+        if(localStorage.getItem('user_id') && localStorage.getItem('username')) {
+            window.location.href = "dashboard.html";
+        }
+
+        function toggleForm() {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+
+            if(loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                title.innerText = "Welcome Back";
+                subtitle.innerText = "Enter your credentials to access the console.";
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                title.innerText = "Create Account";
+                subtitle.innerText = "Start your free 14-day creator toolkit trial.";
+            }
+        }
+
+        async function handleAuth(event, type) {
+            event.preventDefault();
+            
+            try {
+                if(type === 'login') {
+                    const u = document.getElementById('login-user').value;
+                    const p = document.getElementById('login-pass').value;
+                    const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: u, password: p })
+                    });
+                    const data = await res.json();
+                    
+                    if(res.ok) {
+                        localStorage.setItem('user_id', data.user_id);
+                        localStorage.setItem('username', data.username);
+                        localStorage.setItem('plan', data.plan || 'free'); // ⚡ Plan Cached Here
+                        window.location.href = "dashboard.html";
+                    } else { alert("Login Failed: " + data.detail); }
+
+                } else if(type === 'signup') {
+                    const u = document.getElementById('signup-user').value;
+                    const e = document.getElementById('signup-email').value;
+                    const p = document.getElementById('signup-pass').value;
+                    const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: u, email: e, password: p })
+                    });
+                    const data = await res.json();
+                    
+                    if(res.ok) {
+                        alert("Account created! Please Sign In.");
+                        toggleForm();
+                    } else { alert("Signup Failed: " + data.detail); }
+                }
+            } catch (err) { alert("Server connection error."); }
+        }
+    </script>
+</body>
+</html>

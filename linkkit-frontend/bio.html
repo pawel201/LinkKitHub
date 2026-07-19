@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Profile | LinkKitHub</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        /* Premium Glassmorphism */
+        .premium-glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Typography Presets */
+        .font-preset-sans { font-family: ui-sans-serif, system-ui, sans-serif; }
+        .font-preset-mono { font-family: "Space Mono", monospace; }
+        .font-preset-serif { font-family: "Lora", serif; }
+
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-[#020617] text-slate-100 font-preset-sans min-h-screen flex flex-col items-center py-10 px-4 transition-all duration-700 relative selection:bg-indigo-500/30">
+
+    <div class="w-full max-w-md mx-auto space-y-8 relative z-10">
+        
+        <div class="text-center space-y-4">
+            <div class="relative w-28 h-28 mx-auto rounded-full p-1 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 shadow-xl shadow-purple-500/20">
+                <div id="avatar-container" class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-950">
+                    <i id="avatar-icon-fallback" class="fa-solid fa-user-astronaut text-4xl text-slate-500"></i>
+                    <img id="avatar-image-live" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+                </div>
+                <div class="absolute bottom-1 right-1 h-5 w-5 bg-emerald-500 border-2 border-slate-950 rounded-full flex items-center justify-center shadow-lg" title="Verified Creator">
+                    <i class="fa-solid fa-check text-[10px] text-white"></i>
+                </div>
+            </div>
+            
+            <div class="space-y-1.5">
+                <h1 id="bio-username-text" class="text-2xl font-black text-white tracking-wide">@loading...</h1>
+                <p id="bio-title-text" class="text-xs font-bold text-indigo-400 tracking-widest uppercase bg-indigo-500/10 px-3 py-1 border border-indigo-500/20 rounded-full w-max mx-auto">Creator</p>
+                <p id="bio-desc-text" class="text-sm text-slate-400 mt-3 px-4 leading-relaxed font-medium">Fetching profile details...</p>
+            </div>
+        </div>
+
+        <div id="bio-products-container" class="space-y-3"></div>
+
+        <div id="bio-links-container" class="space-y-3"></div>
+
+        <div class="premium-glass rounded-2xl p-6 text-left shadow-2xl space-y-4 mt-6">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    <i class="fa-regular fa-calendar-check text-emerald-400 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-white">Book a Strategy Call</h3>
+                    <p class="text-xs text-slate-400">1-on-1 Session • <span id="consultation-price-badge" class="text-emerald-400 font-bold">$49.00</span></p>
+                </div>
+            </div>
+            
+            <form onsubmit="triggerConsultationPayment(event)" class="space-y-3">
+                <input id="booking-name" type="text" placeholder="Your Full Name" class="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition" required>
+                <input id="booking-email" type="email" placeholder="Your Email Address" class="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition" required>
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="booking-date" type="date" class="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-emerald-500 transition" required>
+                    <select id="booking-time" class="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-emerald-500 transition cursor-pointer" required>
+                        <option value="10:00 AM">10:00 AM</option><option value="12:00 PM">12:00 PM</option><option value="03:00 PM">03:00 PM</option><option value="06:00 PM">06:00 PM</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-900/30 transition transform active:scale-95 cursor-pointer">
+                    Book & Pay Now
+                </button>
+            </form>
+        </div>
+
+        <div class="premium-glass rounded-2xl p-6 text-left shadow-2xl space-y-4">
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+                <i class="fa-regular fa-envelope-open text-indigo-400"></i> Join the Insider List
+            </h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Get my latest templates, strategies, and digital products straight to your inbox.</p>
+            <form onsubmit="subscribeNewsletter(event)" class="flex gap-2">
+                <input id="subscriber-email" type="email" placeholder="Email address..." class="flex-1 bg-slate-950/50 border border-slate-800/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition" required>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-5 rounded-xl transition cursor-pointer shadow-lg active:scale-95">Subscribe</button>
+            </form>
+        </div>
+
+        <div class="pt-6 pb-10 text-center">
+            <a href="index.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/50 border border-slate-800 hover:border-indigo-500/50 transition cursor-pointer">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by</span>
+                <i class="fa-solid fa-link text-indigo-500 text-xs"></i>
+                <span class="text-xs font-black text-white">LinkKitHub</span>
+            </a>
+        </div>
+    </div>
+
+    <div id="stripe-checkout-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl relative overflow-hidden">
+            <div class="bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center"><i class="fa-solid fa-lock text-white text-xs"></i></div>
+                    <span class="font-bold text-slate-800 text-sm">Secure Checkout</span>
+                </div>
+                <button onclick="closeStripeModal()" class="text-slate-400 hover:text-slate-800 transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Due</span>
+                        <span id="checkout-item-title" class="text-sm font-semibold text-slate-700 truncate max-w-[180px]">Item Name</span>
+                    </div>
+                    <span id="checkout-item-price" class="text-xl font-black text-slate-900">$0.00</span>
+                </div>
+
+                <form onsubmit="executeFintechPayment(event)" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-600">Card Information</label>
+                        <div class="relative">
+                            <input type="text" placeholder="4242  4242  4242  4242" class="w-full border border-slate-300 rounded-lg pl-3 pr-10 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-500 font-mono" required>
+                            <i class="fa-brands fa-cc-stripe absolute right-3 top-3.5 text-slate-400 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" placeholder="MM / YY" class="border border-slate-300 rounded-lg px-3 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-500 font-mono text-center" required>
+                        <input type="password" placeholder="CVC" class="border border-slate-300 rounded-lg px-3 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-500 font-mono text-center" required>
+                    </div>
+                    
+                    <button id="pay-button" type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition shadow-lg mt-2 flex justify-center items-center gap-2">
+                        Pay Now
+                    </button>
+                    <p class="text-[10px] text-center text-slate-400 font-medium"><i class="fa-solid fa-shield-halved mr-1"></i> Payments are secure and encrypted.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000";
+        
+        // Grab username from URL (e.g. bio.html?c=john)
+        const urlParams = new URLSearchParams(window.location.search);
+        let creatorUsername = urlParams.get('c'); 
+        
+        // Dynamic States
+        let checkoutCartState = null;
+        let dynamicConsultationFee = 49.00;
+        let buttonThemeClass = "bg-slate-900/40 border-slate-800/50 hover:bg-slate-800 hover:border-indigo-500/50 rounded-xl border text-white"; // default
+
+        // Fallback if no username provided
+        if(!creatorUsername) {
+            document.getElementById('bio-username-text').innerText = "User Not Found";
+            document.getElementById('bio-desc-text').innerText = "Please provide a valid creator username in the URL.";
+        } else {
+            initializePage();
+        }
+
+        async function initializePage() {
+            await fetchProfileData();
+            await fetchProducts();
+            await fetchLinks();
+        }
+
+        async function fetchProfileData() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/public-profile?username=${creatorUsername}`);
+                if(res.ok) {
+                    const data = await res.json();
+                    
+                    // Texts
+                    document.getElementById('bio-username-text').innerText = `@${data.username}`;
+                    document.getElementById('bio-title-text').innerText = data.bio_title;
+                    document.getElementById('bio-desc-text').innerText = data.bio_desc;
+                    
+                    // Price
+                    dynamicConsultationFee = data.consultation_price || 49.00;
+                    document.getElementById('consultation-price-badge').innerText = `$${dynamicConsultationFee.toFixed(2)}`;
+                    
+                    // Avatar
+                    if(data.avatar_url) {
+                        document.getElementById('avatar-image-live').src = data.avatar_url;
+                        document.getElementById('avatar-image-live').classList.remove('hidden');
+                        document.getElementById('avatar-icon-fallback').classList.add('hidden');
+                    }
+
+                    // Themes & Fonts (Appearance Engine)
+                    document.body.classList.add(`font-preset-${data.font_family || "sans"}`);
+                    
+                    const themeClasses = {
+                        "midnight": "bg-[#030712]",
+                        "sunset": "bg-gradient-to-br from-[#1e0b26] to-[#020617]",
+                        "emerald": "bg-gradient-to-br from-[#061c16] to-[#020617]",
+                        "ocean": "bg-gradient-to-br from-[#041d24] to-[#020617]"
+                    };
+                    const chosenTheme = themeClasses[data.theme] || themeClasses["midnight"];
+                    document.body.className = `text-slate-100 font-preset-${data.font_family || "sans"} min-h-screen flex flex-col items-center py-10 px-4 relative ${chosenTheme}`;
+
+                    // Button Styles
+                    const styleMappings = {
+                        "solid": "bg-slate-900 border-slate-700 hover:bg-slate-800 hover:border-indigo-500 rounded-xl border text-white",
+                        "rounded": "bg-slate-900 border-slate-700 hover:bg-slate-800 hover:border-indigo-500 rounded-full border text-white",
+                        "neon": "bg-slate-950 border-indigo-500/50 text-white rounded-xl border shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)]",
+                        "glass": "bg-white/5 border-white/10 backdrop-blur-md text-white rounded-xl border hover:bg-white/10 hover:border-white/20"
+                    };
+                    if(data.button_style && styleMappings[data.button_style]) {
+                        buttonThemeClass = styleMappings[data.button_style];
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchProducts() {
+            try {
+                const container = document.getElementById('bio-products-container');
+                const res = await fetch(`${BACKEND_URL}/api/public-products?username=${creatorUsername}`);
+                if(res.ok) {
+                    const products = await res.json();
+                    container.innerHTML = '';
+                    products.forEach(p => {
+                        const el = document.createElement('div');
+                        el.className = `w-full ${buttonThemeClass} py-4 px-5 flex items-center justify-between shadow-lg cursor-pointer transform transition hover:-translate-y-1 active:scale-95 text-left group`;
+                        el.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-gift text-indigo-400"></i>
+                                <span class="text-sm font-bold tracking-wide">${p.title}</span>
+                            </div>
+                            <span class="text-[11px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-md px-2.5 py-1 group-hover:bg-indigo-500 group-hover:text-white transition">$${p.price.toFixed(2)}</span>
+                        `;
+                        el.addEventListener('click', () => {
+                            openStripeModal(p.title, p.price, "Digital Product 🎁", () => { window.open(p.download_url, '_blank'); });
+                        });
+                        container.appendChild(el);
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchLinks() {
+            try {
+                const container = document.getElementById('bio-links-container');
+                const res = await fetch(`${BACKEND_URL}/api/public-links?username=${creatorUsername}`);
+                const links = await res.json();
+                container.innerHTML = '';
+                links.forEach(link => {
+                    const el = document.createElement('div');
+                    el.className = `w-full ${buttonThemeClass} py-4 px-6 shadow-lg flex items-center justify-center cursor-pointer transform transition hover:-translate-y-1 active:scale-95 text-center`;
+                    el.innerHTML = `<span class="text-sm font-bold tracking-wider">${link.title}</span>`;
+                    el.addEventListener('click', async () => {
+                        try { await fetch(`${BACKEND_URL}/api/click?username=${creatorUsername}&title=${encodeURIComponent(link.title)}`, { method: 'POST' }); } catch (err) {}
+                        window.open(link.url, '_blank');
+                    });
+                    container.appendChild(el);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        // --- CHECKOUT & MODAL LOGIC ---
+        function openStripeModal(title, price, type, successCallback) {
+            document.getElementById('checkout-item-title').innerText = title;
+            document.getElementById('checkout-item-price').innerText = `$${price.toFixed(2)}`;
+            checkoutCartState = { title, price, type, callback: successCallback };
+            const el = document.getElementById('stripe-checkout-modal');
+            el.classList.remove('hidden'); el.classList.add('flex');
+        }
+
+        function closeStripeModal() {
+            const el = document.getElementById('stripe-checkout-modal');
+            el.classList.add('hidden'); el.classList.remove('flex'); 
+            checkoutCartState = null;
+        }
+
+        function triggerConsultationPayment(event) {
+            event.preventDefault();
+            const name = document.getElementById('booking-name').value;
+            const email = document.getElementById('booking-email').value;
+            const date = document.getElementById('booking-date').value;
+            const time = document.getElementById('booking-time').value;
+
+            openStripeModal(`1:1 Call (${date})`, dynamicConsultationFee, "Consultation 🗓️", async () => {
+                const res = await fetch(`${BACKEND_URL}/api/bookings`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: creatorUsername, name, email, booking_date: date, booking_time: time, amount: dynamicConsultationFee })
+                });
+                if(res.ok) {
+                    alert("✅ Payment Verified! Your meeting is confirmed. Check your email.");
+                    document.getElementById('booking-name').value = ''; 
+                    document.getElementById('booking-email').value = ''; 
+                    document.getElementById('booking-date').value = '';
+                }
+            });
+        }
+
+        async function executeFintechPayment(event) {
+            event.preventDefault(); 
+            if(!checkoutCartState) return;
+
+            const btn = document.getElementById('pay-button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing...';
+            btn.disabled = true;
+
+            try {
+                // Fake processing delay
+                await new Promise(r => setTimeout(r, 1500));
+
+                // Send transaction log to backend
+                if(checkoutCartState.type === "Digital Product 🎁") {
+                    await fetch(`${BACKEND_URL}/api/checkout/process`, { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ username: creatorUsername, amount: checkoutCartState.price, item_type: checkoutCartState.type, item_title: checkoutCartState.title, customer_email: "buyer@example.com" }) 
+                    });
+                }
+                
+                const callback = checkoutCartState.callback; 
+                closeStripeModal();
+                if(callback) await callback();
+
+            } catch(e) { 
+                alert("Payment Gateway Error."); 
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // --- NEWSLETTER LOGIC ---
+        async function subscribeNewsletter(event) {
+            event.preventDefault(); 
+            const emailInput = document.getElementById('subscriber-email');
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/leads`, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ username: creatorUsername, email: emailInput.value }) 
+                });
+                if (res.ok) { 
+                    alert("🎉 Awesome! You are now subscribed."); 
+                    emailInput.value = ''; 
+                } else {
+                    alert("You are already subscribed!");
+                }
+            } catch (e) { alert("Error connecting to server."); }
+        }
+    </script>
+</body>
+</html>
