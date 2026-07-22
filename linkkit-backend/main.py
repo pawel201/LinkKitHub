@@ -4,6 +4,28 @@ from pydantic import BaseModel
 import sqlite3
 import datetime
 import os
+from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+
+Base = declarative_base()
+SQLALCHEMY_DATABASE_URL = "sqlite:///./linkkithub.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from sqlalchemy.ext.declarative import declarative_base
+
+
+# Naya automation rule table jisme follow-gate check ka flag bhi hai
+class AutomationRuleDB(Base):
+    __tablename__ = "automation_rules"
+ 
+    id = Column(Integer, primary_key=True, index=True)
+    creator_id = Column(String, index=True)
+    keyword = Column(String, index=True)
+    comment_reply = Column(String)
+    dm_message = Column(String)
+    require_follow = Column(Boolean, default=False) # Ye raha wo checkbox wala optional flag
 
 app = FastAPI()
 
@@ -81,7 +103,28 @@ class DomainCreate(BaseModel):
     user_id: int
     custom_domain: str
 
+class RuleCreate(BaseModel):
+    creator_id: str
+    keyword: str
+    comment_reply: str
+    dm_message: str
+    require_follow: bool = False
 
+@app.post("/api/automation/rule")
+def create_automation_rule(rule: RuleCreate):
+    db = SessionLocal()
+    db_rule = AutomationRuleDB(
+        creator_id=rule.creator_id,
+        keyword=rule.keyword.upper(),
+        comment_reply=rule.comment_reply,
+        dm_message=rule.dm_message,
+        require_follow=rule.require_follow
+    )
+    db.add(db_rule)
+    db.commit()
+    db.refresh(db_rule)
+    db.close()
+    return {"status": "success", "message": "Automation rule saved successfully!"}
 # ========================================================
 # CORE HELPER UTILITIES
 # ========================================================

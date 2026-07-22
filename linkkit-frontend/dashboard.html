@@ -20,7 +20,7 @@
 
     <div class="flex h-screen overflow-hidden">
         
-        <div class="w-64 bg-gray-950 flex flex-col justify-between border-r border-gray-800">
+        <div class="w-64 bg-gray-950 flex flex-col justify-between border-r border-gray-800 hidden md:flex">
             <div class="p-6">
                 <div class="flex items-center space-x-3 mb-10">
                     <i class="fa-solid fa-circle-nodes text-indigo-500 text-2xl"></i>
@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col overflow-y-auto bg-gray-900">
+        <div class="flex-1 flex flex-col overflow-y-auto bg-gray-900 w-full">
             
             <header class="bg-gray-950/50 backdrop-blur border-b border-gray-800 px-8 py-4 flex justify-between items-center sticky top-0 z-40">
                 <h1 class="text-2xl font-bold text-white">Console Overview</h1>
@@ -46,11 +46,11 @@
                     <button onclick="upgradeToPro()" class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold px-5 py-2 rounded-lg text-sm shadow-lg shadow-indigo-500/20 transition cursor-pointer transform active:scale-95 border border-indigo-400">
                         <i class="fa-solid fa-bolt text-yellow-300 mr-1"></i> Upgrade to Pro
                     </button>
-                    <span class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-500/20 flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></span> Server Connected</span>
+                    <span class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-500/20 hidden sm:flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></span> Server Connected</span>
                 </div>
             </header>
 
-            <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
+            <main class="p-4 md:p-8 max-w-7xl w-full mx-auto space-y-8">
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-gray-950 p-6 rounded-xl border border-gray-800 flex items-center justify-between shadow-xl">
@@ -261,7 +261,15 @@
             <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Create New Automation Rule</h3><button onclick="closeKeywordModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div>
             <form onsubmit="saveInstagramRule(event)" class="space-y-4">
                 <div><label class="block text-sm font-medium text-gray-400 mb-1">When user sends keyword:</label><input id="modal-keyword-input" type="text" placeholder="e.g., price" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></div>
-                <div><label class="block text-sm font-medium text-gray-400 mb-1">Trigger response text:</label><textarea id="modal-reply-input" rows="3" placeholder="Type response text..." class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-400 mb-1">Trigger response text / link:</label><textarea id="modal-reply-input" rows="3" placeholder="Check DM for the link! 🚀" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 transition" required></textarea></div>
+                
+                <div class="mb-4 flex items-center">
+                    <input type="checkbox" id="requireFollow" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 bg-gray-900 border-gray-700">
+                    <label for="requireFollow" class="ml-2 block text-sm text-gray-300 font-medium">
+                        Require user to Follow before sending link
+                    </label>
+                </div>
+
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-md cursor-pointer">Save Automation Rule</button>
             </form>
         </div>
@@ -308,7 +316,7 @@
         function launchPublicBioPage() { window.open(`bio.html?c=${username}`, '_blank'); }
         
         function openKeywordModal() { document.getElementById('rule-modal').classList.remove('hidden'); }
-        function closeKeywordModal() { document.getElementById('rule-modal').classList.add('hidden'); document.getElementById('modal-keyword-input').value = ''; document.getElementById('modal-reply-input').value = ''; }
+        function closeKeywordModal() { document.getElementById('rule-modal').classList.add('hidden'); document.getElementById('modal-keyword-input').value = ''; document.getElementById('modal-reply-input').value = ''; document.getElementById('requireFollow').checked = false; }
         function openLinkModal() { const el = document.getElementById('link-modal'); if(el) { el.classList.remove('hidden'); el.classList.add('flex'); } }
         function closeLinkModal() { const el = document.getElementById('link-modal'); if(el) { el.classList.add('hidden'); el.classList.remove('flex'); } document.getElementById('modal-link-title').value = ''; document.getElementById('modal-link-url').value = ''; }
         function openProductModal() { const el = document.getElementById('product-modal'); if(el) { el.classList.remove('hidden'); el.classList.add('flex'); } }
@@ -614,9 +622,34 @@
             } catch (e) { alert("Error publishing asset."); }
         }
 
+        // ==============================================================
+        // THIS IS THE UPDATED JAVASCRIPT FUNCTION FOR THE NEW CHECKBOX
+        // ==============================================================
         async function saveInstagramRule(event) {
             event.preventDefault();
-            try { const response = await fetch(`${BACKEND_URL}/api/rules`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: parseInt(userId), keyword: document.getElementById('modal-keyword-input').value, reply_text: document.getElementById('modal-reply-input').value }) }); if(response.ok) { closeKeywordModal(); fetchAnalytics(); alert("Success! Automation rule saved."); } } catch (e) { alert("Error saving rule."); }
+            
+            // Yahan checkbox ki value nikal rahe hain (True ya False)
+            const requireFollowCheck = document.getElementById('requireFollow') ? document.getElementById('requireFollow').checked : false;
+            
+            try { 
+                const response = await fetch(`${BACKEND_URL}/api/rules`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        user_id: parseInt(userId), 
+                        keyword: document.getElementById('modal-keyword-input').value, 
+                        reply_text: document.getElementById('modal-reply-input').value,
+                        require_follow: requireFollowCheck // Yahan par backend me flag bheja ja raha hai
+                    }) 
+                }); 
+                if(response.ok) { 
+                    closeKeywordModal(); 
+                    fetchAnalytics(); 
+                    alert("Success! Automation rule saved."); 
+                } 
+            } catch (e) { 
+                alert("Error saving rule."); 
+            }
         }
 
         async function saveBioLinkRule(event) {
