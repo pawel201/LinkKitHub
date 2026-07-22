@@ -4,28 +4,6 @@ from pydantic import BaseModel
 import sqlite3
 import datetime
 import os
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
-
-Base = declarative_base()
-SQLALCHEMY_DATABASE_URL = "sqlite:///./linkkithub.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-from sqlalchemy.ext.declarative import declarative_base
-
-
-# Naya automation rule table jisme follow-gate check ka flag bhi hai
-class AutomationRuleDB(Base):
-    __tablename__ = "automation_rules"
- 
-    id = Column(Integer, primary_key=True, index=True)
-    creator_id = Column(String, index=True)
-    keyword = Column(String, index=True)
-    comment_reply = Column(String)
-    dm_message = Column(String)
-    require_follow = Column(Boolean, default=False) # Ye raha wo checkbox wala optional flag
 
 app = FastAPI()
 
@@ -53,10 +31,19 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+# Purana Model (Dashboard ke liye)
 class RuleCreate(BaseModel):
     user_id: int
     keyword: str
     reply_text: str
+
+# Naya Model (Instagram Rule Popup ke liye)
+class AutomationRuleCreate(BaseModel):
+    creator_id: str
+    keyword: str
+    comment_reply: str
+    dm_message: str
+    require_follow: bool = False
 
 class LinkCreate(BaseModel):
     user_id: int
@@ -103,28 +90,7 @@ class DomainCreate(BaseModel):
     user_id: int
     custom_domain: str
 
-class RuleCreate(BaseModel):
-    creator_id: str
-    keyword: str
-    comment_reply: str
-    dm_message: str
-    require_follow: bool = False
 
-@app.post("/api/automation/rule")
-def create_automation_rule(rule: RuleCreate):
-    db = SessionLocal()
-    db_rule = AutomationRuleDB(
-        creator_id=rule.creator_id,
-        keyword=rule.keyword.upper(),
-        comment_reply=rule.comment_reply,
-        dm_message=rule.dm_message,
-        require_follow=rule.require_follow
-    )
-    db.add(db_rule)
-    db.commit()
-    db.refresh(db_rule)
-    db.close()
-    return {"status": "success", "message": "Automation rule saved successfully!"}
 # ========================================================
 # CORE HELPER UTILITIES
 # ========================================================
@@ -157,9 +123,11 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
-    # 🆕 Added plan_type to users table
     cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, plan_type TEXT DEFAULT "free")')
-    cursor.execute('CREATE TABLE IF NOT EXISTS keyword_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, keyword TEXT NOT NULL, reply_text TEXT NOT NULL, UNIQUE(user_id, keyword))')
+    
+    # Updated: Added require_follow column directly to the existing keyword_rules table
+    cursor.execute('CREATE TABLE IF NOT EXISTS keyword_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, keyword TEXT NOT NULL, reply_text TEXT NOT NULL, require_follow BOOLEAN DEFAULT 0, UNIQUE(user_id, keyword))')
+    
     cursor.execute('CREATE TABLE IF NOT EXISTS analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, sender_id TEXT NOT NULL, keyword_triggered TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
     cursor.execute('CREATE TABLE IF NOT EXISTS link_in_bio (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL)')
     cursor.execute('CREATE TABLE IF NOT EXISTS leads (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, email TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(user_id, email))')
@@ -196,7 +164,7 @@ def init_db():
     cursor.execute('CREATE TABLE IF NOT EXISTS email_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, recipient_email TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
     cursor.execute('CREATE TABLE IF NOT EXISTS custom_domains (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE NOT NULL, custom_domain TEXT UNIQUE NOT NULL)')
     
-    # Migrations for existing databases
+    # Migrations for existing databases (Including the new require_follow field)
     try:
         cursor.execute("PRAGMA table_info(users)")
         user_cols = [row[1] for row in cursor.fetchall()]
@@ -225,6 +193,15 @@ def init_db():
             cursor.execute("ALTER TABLE digital_products ADD COLUMN price REAL DEFAULT 0.00")
             conn.commit()
     except Exception: pass
+
+    # NEW MIGRATION: Add require_follow to old keyword_rules table if missing
+    try:
+        cursor.execute("PRAGMA table_info(keyword_rules)")
+        rule_cols = [row[1] for row in cursor.fetchall()]
+        if rule_cols and "require_follow" not in rule_cols:
+            cursor.execute("ALTER TABLE keyword_rules ADD COLUMN require_follow BOOLEAN DEFAULT 0")
+            conn.commit()
+    except Exception: pass
     
     conn.commit()
     conn.close()
@@ -240,7 +217,6 @@ async def register_new_tenant(payload: UserSignup):
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
-        # Default plan is 'free'
         cursor.execute("INSERT INTO users (username, email, password, plan_type) VALUES (?, ?, ?, 'free')", (clean_user, payload.email.strip().lower(), payload.password))
         new_uid = cursor.lastrowid
         cursor.execute("INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (new_uid, payload.username.strip(), "Welcome to My Page!", "Explore links below to connect.", "", "midnight", 49.00, "solid", "sans"))
@@ -255,7 +231,6 @@ async def register_new_tenant(payload: UserSignup):
 async def login_tenant(payload: UserLogin):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    # 🆕 Extract plan_type during login
     cursor.execute("SELECT id, username, plan_type FROM users WHERE username = ? AND password = ?", (payload.username.strip().lower(), payload.password))
     row = cursor.fetchone()
     conn.close()
@@ -296,6 +271,27 @@ async def update_profile_settings(profile: ProfileUpdate):
     conn.close()
     return {"status": "SUCCESS"}
 
+# 🚀 Naya Backend Route jo frontend se match karta hai (No SQLAlchemy needed!)
+@app.post("/api/automation/rule")
+def create_automation_rule(rule: AutomationRuleCreate):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        user_id = int(rule.creator_id)
+        
+        # Save straight to keyword_rules, including the require_follow flag
+        cursor.execute(
+            "INSERT INTO keyword_rules (user_id, keyword, reply_text, require_follow) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(user_id, keyword) DO UPDATE SET reply_text=excluded.reply_text, require_follow=excluded.require_follow",
+            (user_id, rule.keyword.lower().strip(), rule.dm_message.strip(), rule.require_follow)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "SUCCESS", "message": "Automation rule saved successfully!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+# Purana Route for backwards compatibility
 @app.post("/api/rules")
 async def add_keyword_rule(rule: RuleCreate):
     try:
@@ -544,8 +540,10 @@ async def get_dashboard_analytics_tenant(user_id: int):
     cursor.execute("SELECT SUM(amount) FROM transactions WHERE user_id = ?", (user_id,))
     revenue_aggregate = cursor.fetchone()[0]
     total_revenue = round(revenue_aggregate, 2) if revenue_aggregate else 0.0
+    
     cursor.execute("SELECT keyword, reply_text FROM keyword_rules WHERE user_id = ?", (user_id,))
     active_rules = [{"keyword": r[0], "reply_text": r[1]} for r in cursor.fetchall()]
+    
     cursor.execute("SELECT email, timestamp FROM leads WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
     captured_emails = [{"email": row[0], "date": row[1]} for row in cursor.fetchall()]
     cursor.execute("SELECT id, name, email, booking_date, booking_time FROM bookings WHERE user_id = ? ORDER BY booking_date ASC, booking_time ASC", (user_id,))
@@ -585,11 +583,8 @@ async def get_dashboard_analytics_tenant(user_id: int):
 # ========================================================
 # 🤖 META INSTAGRAM AUTOMATION WEBHOOK ENGINE
 # ========================================================
-import json
-
 VERIFY_TOKEN = "linkkithub_secret_token_123"
 
-# 1. Meta Webhook Verification Endpoint (Meta checks this when connecting)
 @app.get("/webhook/instagram")
 async def verify_instagram_webhook(request: Request):
     query_params = request.query_params
@@ -602,20 +597,17 @@ async def verify_instagram_webhook(request: Request):
         return int(challenge)
     raise HTTPException(status_code=403, detail="Verification token mismatch")
 
-
 class SimulatedComment(BaseModel):
     username: str
     follower_id: str
     comment_text: str
 
-# 2. Webhook Event Receiver (Simulated for testing)
 @app.post("/api/simulate-insta-comment")
 async def simulate_instagram_comment(payload: SimulatedComment):
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
         
-        # Find the creator by username
         cursor.execute("SELECT id FROM users WHERE username = ?", (payload.username.strip().lower(),))
         user_res = cursor.fetchone()
         
@@ -625,21 +617,25 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         user_id = user_res[0]
         incoming_text = payload.comment_text.strip().lower()
 
-        # Check if the comment matches any saved keyword rule
-        cursor.execute("SELECT keyword, reply_text FROM keyword_rules WHERE user_id = ?", (user_id,))
+        # Database se rule padhna (with Follow-Gate flag)
+        cursor.execute("SELECT keyword, reply_text, require_follow FROM keyword_rules WHERE user_id = ?", (user_id,))
         rules = cursor.fetchall()
         
         matched_rule = None
         for rule in rules:
-            if rule[0] in incoming_text:  # Keyword match
+            if rule[0] in incoming_text:  
                 matched_rule = rule
                 break
                 
         if matched_rule:
             keyword_triggered = matched_rule[0]
             reply_text = matched_rule[1]
+            require_follow = bool(matched_rule[2])
             
-            # Log this in Analytics (This will show up in Dashboard!)
+            # Agar Follow-Gate on hai, toh message change kar do!
+            if require_follow:
+                reply_text = f"⚠️ [Follow-Gated Check] Pehle hamari profile ko follow karo, tabhi link milega! 🚀\n\nDirect Link: {reply_text}"
+
             cursor.execute("INSERT INTO analytics (user_id, sender_id, keyword_triggered) VALUES (?, ?, ?)", 
                            (user_id, payload.follower_id, keyword_triggered))
             conn.commit()
