@@ -626,31 +626,38 @@
         // THIS IS THE UPDATED JAVASCRIPT FUNCTION FOR THE NEW CHECKBOX
         // ==============================================================
         async function saveInstagramRule(event) {
-            event.preventDefault();
-            
-            // Yahan checkbox ki value nikal rahe hain (True ya False)
-            const requireFollowCheck = document.getElementById('requireFollow') ? document.getElementById('requireFollow').checked : false;
-            
-            try { 
-                const response = await fetch(`${BACKEND_URL}/api/rules`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ 
-                        user_id: parseInt(userId), 
-                        keyword: document.getElementById('modal-keyword-input').value, 
-                        reply_text: document.getElementById('modal-reply-input').value,
-                        require_follow: requireFollowCheck // Yahan par backend me flag bheja ja raha hai
-                    }) 
-                }); 
-                if(response.ok) { 
-                    closeKeywordModal(); 
-                    fetchAnalytics(); 
-                    alert("Success! Automation rule saved."); 
-                } 
-            } catch (e) { 
-                alert("Error saving rule."); 
-            }
+    event.preventDefault();
+    
+    // Checkbox ki value check kar rahe hain
+    const requireFollowCheck = document.getElementById('requireFollow') ? document.getElementById('requireFollow').checked : false;
+    
+    try { 
+        // Naye Backend API route par bhej rahe hain
+        const response = await fetch(`${BACKEND_URL}/api/automation/rule`, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ 
+                creator_id: String(userId), // Backend ko string chahiye
+                keyword: document.getElementById('modal-keyword-input').value, 
+                comment_reply: "Check your DM! 🚀", // Public comment ka reply
+                dm_message: document.getElementById('modal-reply-input').value, // DM me bhejne wala link
+                require_follow: requireFollowCheck // Checkbox ka status
+            }) 
+        }); 
+        
+        if(response.ok) { 
+            closeKeywordModal(); 
+            fetchAnalytics(); 
+            alert("Success! Automation rule saved."); 
+        } else {
+            // Agar backend me koi error aayega toh ab chupchap fail nahi hoga, alert aayega!
+            const errDetail = await response.text();
+            alert("Backend Error Aa Gaya: " + errDetail);
         }
+    } catch (e) { 
+        alert("Server se connect nahi ho paya: " + e.message); 
+    }
+}
 
         async function saveBioLinkRule(event) {
             event.preventDefault();
