@@ -650,5 +650,47 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         raise HTTPException(status_code=500, detail="Webhook processing failed")
     finally:
         conn.close()
+
+# ========================================================
+# 👑 SUPER ADMIN CONTROL ROOM APIS
+# ========================================================
+@app.get("/api/admin/stats")
+async def get_super_admin_stats():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT SUM(amount) FROM transactions")
+    total_rev = cursor.fetchone()[0] or 0.0
+    
+    cursor.execute("SELECT COUNT(*) FROM link_in_bio")
+    total_links = cursor.fetchone()[0]
+    
+    conn.close()
+    return {
+        "total_creators": total_users,
+        "total_platform_revenue": round(total_rev, 2),
+        "total_links_created": total_links
+    }
+
+@app.get("/api/admin/users")
+async def get_all_users():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, email, plan_type FROM users ORDER BY id DESC")
+    users = [{"id": row[0], "username": row[1], "email": row[2], "plan": row[3].upper()} for row in cursor.fetchall()]
+    conn.close()
+    return users
+
+@app.delete("/api/admin/users/{user_id}")
+async def ban_user(user_id: int):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "SUCCESS", "message": "User banned from platform."}
  
 init_db()
