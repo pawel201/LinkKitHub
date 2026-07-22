@@ -31,7 +31,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Sabhi websites ko allow karega
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
