@@ -3,59 +3,137 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkKitHub - Login</title>
+    <title>LinkKitHub - Secure Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-950 text-white font-sans min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-950 text-white font-sans min-h-screen flex items-center justify-center p-4 relative">
 
-    <div class="w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+    <div class="w-full max-w-lg bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
         
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-500 mb-4">
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-500 mb-3">
                 <i class="fa-solid fa-circle-nodes text-2xl"></i>
             </div>
             <h2 class="text-2xl font-bold tracking-wider" id="form-title">Welcome Back</h2>
             <p class="text-sm text-gray-400 mt-1" id="form-subtitle">Enter your credentials to access the console.</p>
         </div>
 
-        <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-5 block">
+        <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-4 block">
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Username</label>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Username or Email</label>
                 <input id="login-user" type="text" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="block text-xs font-semibold text-gray-400 uppercase">Password</label>
+                    <button type="button" onclick="openForgotModal()" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer">Forgot Password?</button>
+                </div>
                 <input id="login-pass" type="password" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
             </div>
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-900/20">Sign In</button>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-900/20 cursor-pointer">Sign In</button>
             <p class="text-center text-sm text-gray-400 mt-4">Don't have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Sign Up</span></p>
         </form>
 
-        <form id="signup-form" onsubmit="handleAuth(event, 'signup')" class="space-y-5 hidden">
-            <div>
-                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Choose Username</label>
-                <input id="signup-user" type="text" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+        <form id="signup-form" onsubmit="handleSignupStep1(event)" class="space-y-4 hidden">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">First Name</label>
+                    <input id="signup-firstname" type="text" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Last Name</label>
+                    <input id="signup-lastname" type="text" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+                </div>
             </div>
+
             <div>
                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Email Address</label>
-                <input id="signup-email" type="email" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+                <input id="signup-email" type="email" placeholder="name@domain.com" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition" required oninput="validateEmailLive()">
+                <p id="email-warning" class="text-xs text-red-400 mt-1 hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Please enter a valid email address.</p>
             </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Contact Number</label>
+                <div class="flex gap-2">
+                    <select id="country-code" class="bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono cursor-pointer">
+                        <option value="+91">🇮🇳 +91 (IN)</option>
+                        <option value="+1">🇺🇸 +1 (US)</option>
+                        <option value="+44">🇬🇧 +44 (UK)</option>
+                        <option value="+971">🇦🇪 +971 (UAE)</option>
+                        <option value="+61">🇦🇺 +61 (AU)</option>
+                    </select>
+                    <input id="signup-phone" type="tel" placeholder="9876543210" class="flex-1 bg-gray-950 border border-gray-800 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-500 transition" required>
+                </div>
+            </div>
+
             <div>
                 <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Password</label>
-                <input id="signup-pass" type="password" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+                <input id="signup-pass" type="password" placeholder="••••••••" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition" required oninput="checkPasswordRules()">
+                
+                <div class="mt-2 text-xs space-y-1 font-mono bg-gray-950/60 p-2.5 rounded-lg border border-gray-800/80">
+                    <p id="rule-len" class="text-red-400"><i class="fa-solid fa-circle-xmark mr-1"></i> At least 8-10 characters</p>
+                    <p id="rule-upper" class="text-red-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Uppercase letter (A-Z)</p>
+                    <p id="rule-lower" class="text-red-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Lowercase letter (a-z)</p>
+                    <p id="rule-num" class="text-red-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Number (0-9)</p>
+                    <p id="rule-special" class="text-red-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Special character (@$!%*?&)</p>
+                </div>
             </div>
-            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-emerald-900/20">Create Free Account</button>
-            <p class="text-center text-sm text-gray-400 mt-4">Already have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Sign In</span></p>
+
+            <button type="submit" id="send-otp-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-emerald-900/20 cursor-pointer">Send Verification Code</button>
+            <p class="text-center text-sm text-gray-400 mt-3">Already have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Sign In</span></p>
         </form>
 
+        <div id="otp-verification-box" class="hidden space-y-4 pt-2">
+            <div class="bg-indigo-950/40 border border-indigo-500/30 p-4 rounded-xl text-center space-y-1">
+                <p class="text-xs text-indigo-300 font-medium">Verification OTP sent to your email/phone simulation log.</p>
+                <p id="otp-debug-hint" class="text-xs font-mono font-bold text-emerald-400"></p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase mb-1 text-center">Enter 6-Digit OTP Code</label>
+                <input id="otp-input" type="text" maxlength="6" placeholder="000000" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-3 text-center tracking-widest text-xl font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+            </div>
+            <button type="button" onclick="verifyOtpAndRegister()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-emerald-900/20 cursor-pointer">Verify & Complete Registration</button>
+        </div>
+
+    </div>
+
+    <div id="forgot-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 relative">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-key text-indigo-400 mr-2"></i> Password Recovery</h3>
+                <button onclick="closeForgotModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div id="forgot-step-1" class="space-y-3">
+                <p class="text-xs text-gray-400">Enter your registered email address or phone number to receive a 6-digit recovery code.</p>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Email or Phone</label>
+                    <input id="forgot-identifier" type="text" placeholder="name@domain.com" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+                </div>
+                <button type="button" onclick="sendResetOtp()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer">Send Recovery Code</button>
+            </div>
+
+            <div id="forgot-step-2" class="space-y-3 hidden">
+                <p class="text-xs text-emerald-400 font-mono" id="forgot-otp-hint"></p>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Enter 6-Digit Code</label>
+                    <input id="forgot-otp-input" type="text" maxlength="6" placeholder="123456" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2 text-center tracking-widest text-lg font-mono focus:outline-none focus:border-indigo-500 transition" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">New Password</label>
+                    <input id="forgot-new-pass" type="password" placeholder="••••••••" class="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 transition" required>
+                </div>
+                <button type="button" onclick="confirmPasswordReset()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer">Update Password</button>
+            </div>
+        </div>
     </div>
 
     <script>
         const BACKEND_URL = "https://linkkithub.onrender.com";
+        let tempSignupData = {};
+        let activeGeneratedOtp = "";
 
-        // If already logged in, skip to dashboard
         if(localStorage.getItem('user_id') && localStorage.getItem('username')) {
             window.location.href = "dashboard.html";
         }
@@ -63,9 +141,11 @@
         function toggleForm() {
             const loginForm = document.getElementById('login-form');
             const signupForm = document.getElementById('signup-form');
+            const otpBox = document.getElementById('otp-verification-box');
             const title = document.getElementById('form-title');
             const subtitle = document.getElementById('form-subtitle');
 
+            otpBox.classList.add('hidden');
             if(loginForm.classList.contains('hidden')) {
                 loginForm.classList.remove('hidden');
                 signupForm.classList.add('hidden');
@@ -75,46 +155,176 @@
                 loginForm.classList.add('hidden');
                 signupForm.classList.remove('hidden');
                 title.innerText = "Create Account";
-                subtitle.innerText = "Start your free 14-day creator toolkit trial.";
+                subtitle.innerText = "Start your free creator toolkit journey.";
             }
         }
 
-        async function handleAuth(event, type) {
+        // Live Email Regex Validation Check
+        function validateEmailLive() {
+            const email = document.getElementById('signup-email').value;
+            const warning = document.getElementById('email-warning');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if(email.length > 0 && !emailRegex.test(email)) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        // Real-time Password Security Checklist Checker
+        function checkPasswordRules() {
+            const pass = document.getElementById('signup-pass').value;
+            
+            const hasLen = pass.length >= 8;
+            const hasUpper = /[A-Z]/.test(pass);
+            const hasLower = /[a-z]/.test(pass);
+            const hasNum = /[0-9]/.test(pass);
+            const hasSpecial = /[@$!%*?&]/.test(pass);
+
+            setRuleStatus('rule-len', hasLen);
+            setRuleStatus('rule-upper', hasUpper);
+            setRuleStatus('rule-lower', hasLower);
+            setRuleStatus('rule-num', hasNum);
+            setRuleStatus('rule-special', hasSpecial);
+        }
+
+        function setRuleStatus(id, isValid) {
+            const el = document.getElementById(id);
+            if(isValid) {
+                el.className = "text-emerald-400";
+                el.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${el.innerText.substring(2)}`;
+            } else {
+                el.className = "text-red-400";
+                el.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> ${el.innerText.substring(2)}`;
+            }
+        }
+
+        // Step 1 of Signup: Validate & Request OTP
+        async function handleSignupStep1(event) {
             event.preventDefault();
             
-            try {
-                if(type === 'login') {
-                    const u = document.getElementById('login-user').value;
-                    const p = document.getElementById('login-pass').value;
-                    const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: u, password: p })
-                    });
-                    const data = await res.json();
-                    
-                    if(res.ok) {
-                        localStorage.setItem('user_id', data.user_id);
-                        localStorage.setItem('username', data.username);
-                        localStorage.setItem('plan', data.plan || 'free'); // ⚡ Plan Cached Here
-                        window.location.href = "dashboard.html";
-                    } else { alert("Login Failed: " + data.detail); }
+            const pass = document.getElementById('signup-pass').value;
+            const strictRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if(!strictRegex.test(pass)) {
+                alert("Password security requirements poori nahi ho rahi hain! Kripya checklist check karein.");
+                return;
+            }
 
-                } else if(type === 'signup') {
-                    const u = document.getElementById('signup-user').value;
-                    const e = document.getElementById('signup-email').value;
-                    const p = document.getElementById('signup-pass').value;
+            tempSignupData = {
+                first_name: document.getElementById('signup-firstname').value,
+                last_name: document.getElementById('signup-lastname').value,
+                email: document.getElementById('signup-email').value,
+                country_code: document.getElementById('country-code').value,
+                phone_number: document.getElementById('signup-phone').value,
+                password: pass
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/auth/advanced-signup`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tempSignupData)
+                });
+                const data = await res.json();
+                
+                if(res.ok) {
+                    activeGeneratedOtp = data.debug_otp;
+                    document.getElementById('signup-form').classList.add('hidden');
+                    document.getElementById('otp-verification-box').classList.remove('hidden');
+                    document.getElementById('otp-debug-hint').innerText = `[Simulation OTP]: ${activeGeneratedOtp}`;
+                } else {
+                    alert("Signup Failed: " + data.detail);
+                }
+            } catch(e) { alert("Server connection error during signup request."); }
+        }
+
+        // Step 2: Verify OTP & Save Account
+        async function verifyOtpAndRegister() {
+            const userEnteredOtp = document.getElementById('otp-input').value;
+            if(userEnteredOtp === activeGeneratedOtp) {
+                // Now actual sign up in main backend table
+                try {
+                    const uName = tempSignupData.email.split('@')[0].toLowerCase() + Math.floor(Math.random()*90 + 10);
                     const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: u, email: e, password: p })
+                        body: JSON.stringify({ username: uName, email: tempSignupData.email, password: tempSignupData.password })
                     });
-                    const data = await res.json();
-                    
                     if(res.ok) {
-                        alert("Account created! Please Sign In.");
+                        alert("🎉 Account Verified & Created Successfully! Please Sign In.");
                         toggleForm();
-                    } else { alert("Signup Failed: " + data.detail); }
-                }
+                    } else {
+                        const err = await res.json();
+                        alert("Registration Error: " + err.detail);
+                    }
+                } catch(e) { alert("Database connection error."); }
+            } else {
+                alert("Invalid OTP code! Kripya sahi code enter karein.");
+            }
+        }
+
+        // Login Handler
+        async function handleAuth(event, type) {
+            event.preventDefault();
+            try {
+                const u = document.getElementById('login-user').value;
+                const p = document.getElementById('login-pass').value;
+                const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const data = await res.json();
+                
+                if(res.ok) {
+                    localStorage.setItem('user_id', data.user_id);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('plan', data.plan || 'free');
+                    window.location.href = "dashboard.html";
+                } else { alert("Login Failed: " + data.detail); }
             } catch (err) { alert("Server connection error."); }
+        }
+
+        // Forgot Password Modal Controls
+        function openForgotModal() { document.getElementById('forgot-modal').classList.remove('hidden'); }
+        function closeForgotModal() { 
+            document.getElementById('forgot-modal').classList.add('hidden');
+            document.getElementById('forgot-step-1').classList.remove('hidden');
+            document.getElementById('forgot-step-2').classList.add('hidden');
+        }
+
+        async function sendResetOtp() {
+            const identifier = document.getElementById('forgot-identifier').value;
+            if(!identifier) { alert("Kripya email enter karein."); return; }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: identifier })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    document.getElementById('forgot-step-1').classList.add('hidden');
+                    document.getElementById('forgot-step-2').classList.remove('hidden');
+                    document.getElementById('forgot-otp-hint').innerText = `[Recovery OTP Simulation]: ${data.debug_otp}`;
+                } else { alert("Error: " + data.detail); }
+            } catch(e) { alert("Server error."); }
+        }
+
+        async function confirmPasswordReset() {
+            const email = document.getElementById('forgot-identifier').value;
+            const code = document.getElementById('forgot-otp-input').value;
+            const newPass = document.getElementById('forgot-new-pass').value;
+
+            if(!code || !newPass) { alert("Sabhi fields bharein."); return; }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, otp_code: code, new_password: newPass })
+                });
+                if(res.ok) {
+                    alert("🎉 Password successfully updated! Ab aap naye password se login kar sakte hain.");
+                    closeForgotModal();
+                } else { alert("Failed to reset password."); }
+            } catch(e) { alert("Server error."); }
         }
     </script>
 </body>
