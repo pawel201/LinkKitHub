@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkKitHub - Creator Analytics Console</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -384,28 +385,87 @@
             el.classList.remove('flex');
         }
 
-        async function confirmUpgradePayment(event) {
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Connecting to ${detectedGateway === 'razorpay' ? 'Razorpay' : 'Stripe'}...`;
-            btn.disabled = true;
+    async function confirmUpgradePayment(event) {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    
+    try {
+        if (userCountry === 'IN') {
+            // ==========================================
+            // 🇮🇳 RAZORPAY PAYMENT FLOW (For India)
+            // ==========================================
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Opening Razorpay...`;
             
-            try {
-                await new Promise(r => setTimeout(r, 2000)); 
-                const res = await fetch(`${BACKEND_URL}/api/subscription/upgrade?user_id=${userId}`, { method: 'POST' });
-                if(res.ok) { 
-                    localStorage.setItem('plan', 'pro'); 
-                    alert(`🎉 Secured via ${detectedGateway.toUpperCase()}! Welcome to LinkKitHub PRO.`);
-                    location.reload(); 
-                } else {
-                    throw new Error("API failed");
+            const amountInPaise = (currentBillingCycle === 'monthly' ? 1499 : 14999) * 100; // INR in paise
+            
+            var options = {
+                "key": "rzp_test_YOUR_RAZORPAY_KEY", // Yahan apna test/live key dalna baad me
+                "amount": amountInPaise, 
+                "currency": "INR",
+                "name": "LinkKitHub PRO",
+                "description": "Creator Toolkit Monthly Subscription",
+                "image": "https://i.imgur.com/3g7nmJC.png",
+                "handler": async function (response){
+                    // Payment successful hone ke baad backend ko batao
+                    await verifyPaymentOnBackend("razorpay", response.razorpay_payment_id, currentBillingCycle === 'monthly' ? 18.00 : 180.00);
+                },
+                "prefill": {
+                    "name": username,
+                    "email": "creator@example.com"
+                },
+                "theme": {
+                    "color": "#6366f1"
                 }
-            } catch(e) {
-                alert("Payment Gateway Error. Please try again.");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
+        } else {
+            // ==========================================
+            // 🌍 STRIPE PAYMENT FLOW (International)
+            // ==========================================
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Connecting to Stripe...`;
+            
+            // Simulation / Direct verification for sandbox testing
+            await new Promise(r => setTimeout(r, 1500));
+            const packageAmount = currentBillingCycle === 'monthly' ? 19.00 : 190.00;
+            await verifyPaymentOnBackend("stripe", "seti_test_stripe_token_" + Math.floor(Math.random()*99999), packageAmount);
         }
+        
+    } catch(e) {
+        alert("Payment Error: " + e.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function verifyPaymentOnBackend(gateway, paymentId, amount) {
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/payment/verify-and-upgrade`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: parseInt(userId),
+                gateway: gateway,
+                payment_id: paymentId,
+                amount: amount
+            })
+        });
+        
+        if(res.ok) {
+            localStorage.setItem('plan', 'pro');
+            alert(`🎉 PAYMENT SUCCESSFUL (${gateway.toUpperCase()})!\nWelcome to LinkKitHub PRO.`);
+            location.reload();
+        } else {
+            alert("Payment verified on gateway, but database update failed.");
+        }
+    } catch (err) {
+        alert("Server communication error during payment verification.");
+    }
+}
 
         // ==========================================
         // [PART-12: JS FETCH DATA & CRUD OPERATIONS]
