@@ -239,27 +239,32 @@
 
         // Step 2: Verify OTP & Save Account
         async function verifyOtpAndRegister() {
-            const userEnteredOtp = document.getElementById('otp-input').value;
-            if(userEnteredOtp === activeGeneratedOtp) {
-                // Now actual sign up in main backend table
-                try {
-                    const uName = tempSignupData.email.split('@')[0].toLowerCase() + Math.floor(Math.random()*90 + 10);
-                    const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: uName, email: tempSignupData.email, password: tempSignupData.password })
-                    });
-                    if(res.ok) {
-                        alert("🎉 Account Verified & Created Successfully! Please Sign In.");
-                        toggleForm();
-                    } else {
-                        const err = await res.json();
-                        alert("Registration Error: " + err.detail);
-                    }
-                } catch(e) { alert("Database connection error."); }
+    const userEnteredOtp = document.getElementById('otp-input').value;
+    
+    if (userEnteredOtp === activeGeneratedOtp) {
+        try {
+            // Dispatching the complete validated tenant payload to the backend persistence layer
+            const response = await fetch(`${BACKEND_URL}/api/auth/advanced-signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tempSignupData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert("Account verified and registered successfully. Please proceed to sign in.");
+                toggleForm();
             } else {
-                alert("Invalid OTP code! Kripya sahi code enter karein.");
+                alert("Registration Failed: " + (result.detail || "Database constraint violation."));
             }
+        } catch (error) {
+            alert("Critical Error: Unable to establish database communication.");
         }
+    } else {
+        alert("Authentication Error: The provided verification code is invalid.");
+    }
+}
 
         // Login Handler
         async function handleAuth(event, type) {
