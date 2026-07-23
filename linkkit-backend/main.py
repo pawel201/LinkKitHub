@@ -723,4 +723,106 @@ async def verify_payment_and_upgrade(payload: PaymentVerify):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Payment processing failed: {str(e)}")
 
+    # ========================================================
+# 🔐 ADVANCED AUTHENTICATION & OTP SYSTEM
+# ========================================================
+import random
+
+class AdvancedSignup(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    country_code: str
+    phone_number: str
+    password: str
+
+class VerifyOTP(BaseModel):
+    email: str
+    otp_code: str
+
+class ForgotPasswordRequest(BaseModel):
+    identifier: str  # Email ya Phone number
+
+class ResetPasswordModel(BaseModel):
+    email: str
+    otp_code: str
+    new_password: str
+
+# 1. Signup API (Naye user ko register karega aur OTP generate karega)
+@app.post("/api/auth/advanced-signup")
+async def advanced_signup(payload: AdvancedSignup):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    # Check if email already exists
+    cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
+    
+    # 6-Digit OTP generate karna
+    generated_otp = str(random.randint(100000, 999999))
+    
+    try:
+        # Users table mein naye fields save karo (Agar table mein columns nahi hain toh migrate kar lenge)
+        username = payload.email.split('@')[0].lower() + str(random.randint(10,99))
+        
+        cursor.execute(
+            "INSERT INTO users (username, email, password, plan_type) VALUES (?, ?, ?, 'free')",
+            (username, payload.email.strip().lower(), payload.password)
+        )
+        new_uid = cursor.lastrowid
+        
+        # Default profile settings
+        cursor.execute(
+            "INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (new_uid, username, f"{payload.first_name} {payload.last_name}", "Welcome to my creator page!", "", "midnight", 49.00, "solid", "sans")
+        )
+        
+        # Simulation ke liye email logs mein OTP daalna taaki creator dekh sake
+        simulate_smtp_email_dispatch(new_uid, payload.email, "🔒 LinkKitHub Verification Code", f"Hello {payload.first_name}, Aapka Signup OTP code hai: {generated_otp}")
+        
+        conn.commit()
+        conn.close()
+        
+        print(f"🔑 [SIMULATED OTP for {payload.email}]: {generated_otp}")
+        return {"status": "SUCCESS", "message": "OTP sent successfully!", "debug_otp": generated_otp}
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 2. Forgot Password Request API
+@app.post("/api/auth/forgot-password")
+async def forgot_password_request(payload: ForgotPasswordRequest):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id, email FROM users WHERE email = ?", (payload.identifier.strip().lower(),))
+    user = cursor.fetchone()
+    
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Yeh email hamare database mein nahi mila.")
+    
+    user_id, email = user
+    reset_otp = str(random.randint(100000, 999999))
+    
+    # Email logs mein reset OTP bhej do (simulation)
+    simulate_smtp_email_dispatch(user_id, email, "🔑 Password Reset OTP", f"Aapka password reset code hai: {reset_otp}")
+    conn.close()
+    
+    print(f"🔑 [PASSWORD RESET OTP for {email}]: {reset_otp}")
+    return {"status": "SUCCESS", "message": "Reset code sent to email!", "debug_otp": reset_otp}
+
+# 3. Reset Password Confirm API
+@app.post("/api/auth/reset-password")
+async def reset_password_confirm(payload: ResetPasswordModel):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("UPDATE users SET password = ? WHERE email = ?", (payload.new_password, payload.email.strip().lower()))
+    conn.commit()
+    conn.close()
+    return {"status": "SUCCESS", "message": "Password successfully updated!"}
+
 init_db()
