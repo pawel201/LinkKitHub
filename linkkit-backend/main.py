@@ -693,4 +693,34 @@ async def ban_user(user_id: int):
     conn.close()
     return {"status": "SUCCESS", "message": "User banned from platform."}
  
+# ========================================================
+# 💳 PAYMENT GATEWAY & PRO UPGRADE API
+# ========================================================
+class PaymentVerify(BaseModel):
+    user_id: int
+    gateway: str  # "stripe" ya "razorpay"
+    payment_id: str
+    amount: float
+
+@app.post("/api/payment/verify-and-upgrade")
+async def verify_payment_and_upgrade(payload: PaymentVerify):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # 1. User ka plan 'pro' karo
+        cursor.execute("UPDATE users SET plan_type = 'pro' WHERE id = ?", (payload.user_id,))
+        
+        # 2. Transactions table mein entry save karo (Taki Admin/Dashboard mein dikhe)
+        cursor.execute(
+            "INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)",
+            (payload.user_id, payload.amount, f"Subscription ({payload.gateway.upper()})", "LinkKitHub PRO Lifetime/Monthly", "creator@linkkithub.dev")
+        )
+        
+        conn.commit()
+        conn.close()
+        return {"status": "SUCCESS", "message": "Payment verified and account upgraded to PRO!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment processing failed: {str(e)}")
+
 init_db()
