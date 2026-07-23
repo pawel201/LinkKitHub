@@ -211,22 +211,54 @@ def init_db():
 # ========================================================
 # TENANT IDENTITY & SUBSCRIPTION APIS
 # ========================================================
-@app.post("/api/auth/signup")
-async def register_new_tenant(payload: UserSignup):
-    clean_user = payload.username.strip().lower()
+@app.post("/api/auth/advanced-signup")
+async def advanced_signup(payload: UserSignup):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="The email address is already registered.")
+    
+    generated_otp = str(random.randint(100000, 999999))
+    
     try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, email, password, plan_type) VALUES (?, ?, ?, 'free')", (clean_user, payload.email.strip().lower(), payload.password))
+        # First name aur Last name se clean username generate karna
+        base_username = (payload.first_name.strip() + payload.last_name.strip()).lower()
+        base_username = "".join(e for e in base_username if e.isalnum()) # Sirf alphanumeric characters rakhein
+        if not base_username:
+            base_username = payload.email.split('@')[0].lower()
+            
+        unique_suffix = str(random.randint(100, 999))
+        assigned_username = base_username + unique_suffix
+        
+        cursor.execute(
+            "INSERT INTO users (username, email, password, plan_type) VALUES (?, ?, ?, 'free')",
+            (assigned_username, payload.email.strip().lower(), payload.password)
+        )
         new_uid = cursor.lastrowid
-        cursor.execute("INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (new_uid, payload.username.strip(), "Welcome to My Page!", "Explore links below to connect.", "", "midnight", 49.00, "solid", "sans"))
-        cursor.execute("INSERT INTO link_in_bio (user_id, title, url) VALUES (?, ?, ?)", (new_uid, "My Masterclass Channel 🚀", "https://linkkithub.dev"))
+        
+        cursor.execute(
+            "INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (new_uid, assigned_username, f"{payload.first_name} {payload.last_name}", "Welcome to my creator page!", "", "midnight", 49.00, "solid", "sans")
+        )
+        
+        simulate_smtp_email_dispatch(new_uid, payload.email, "LinkKitHub Verification Code", f"Hello {payload.first_name}, your verification OTP is: {generated_otp}")
+        
         conn.commit()
         conn.close()
-        return {"status": "SUCCESS", "message": "Account created successfully!"}
-    except sqlite3.IntegrityError: 
-        raise HTTPException(status_code=400, detail="Username or Email already registered.")
-
+        
+        return {
+            "status": "SUCCESS", 
+            "message": "OTP generated successfully.", 
+            "assigned_username": assigned_username,
+            "debug_otp": generated_otp
+        }
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @app.post("/api/auth/login")
 async def login_tenant(payload: UserLogin):
     conn = sqlite3.connect(DB_NAME)
