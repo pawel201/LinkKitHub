@@ -3,121 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkKitHub — Creator Studio</title>
+    <title>LinkKitHub | Enterprise Authentication Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .creator-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%); }
-        .glass-card { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); }
+        body { font-family: 'Inter', sans-serif; }
+        .enterprise-bg { background-color: #090D16; }
+        .enterprise-card { background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .enterprise-input:focus { border-color: #6366F1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
     </style>
 </head>
-<body class="creator-bg text-slate-800 min-h-screen flex items-center justify-center p-4 md:p-6">
+<body class="enterprise-bg text-slate-100 min-h-screen flex items-center justify-center p-4 md:p-6">
 
-    <div class="w-full max-w-5xl min-h-[620px] glass-card rounded-3xl shadow-2xl flex overflow-hidden border border-white/20">
+    <div class="w-full max-w-5xl min-h-[600px] enterprise-card rounded-2xl shadow-2xl flex overflow-hidden">
         
-        <div class="hidden lg:flex w-1/2 p-12 bg-slate-900 text-white flex-col justify-between relative overflow-hidden">
-            <div class="absolute -top-24 -left-24 w-72 h-72 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none"></div>
-            <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-16">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                        <i class="fa-solid fa-sparkles"></i>
+        <div class="hidden lg:flex w-1/2 p-12 bg-slate-950/60 flex-col justify-between border-r border-slate-800/80 relative">
+            <div>
+                <div class="flex items-center gap-3 mb-12">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+                        <i class="fa-solid fa-cube text-lg"></i>
                     </div>
-                    <span class="text-xl font-extrabold tracking-tight text-white">LinkKitHub</span>
+                    <span class="text-lg font-bold tracking-tight text-white">LinkKitHub Enterprise</span>
                 </div>
 
-                <div class="space-y-5">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">For Creators & Brands</span>
-                    <h1 class="text-4xl font-extrabold leading-tight tracking-tight text-white">Apna Digital Business Ek Hi Jagah Se Chalayein.</h1>
-                    <p class="text-slate-400 text-sm leading-relaxed">Link-in-bio, digital products, booking calendar, aur auto-reply sab kuch ek simple platform par.</p>
+                <div class="space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] font-mono font-semibold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <i class="fa-solid fa-shield-halved"></i> Secure Access Terminal
+                    </div>
+                    <h1 class="text-3xl font-extrabold text-white leading-tight tracking-tight">Unified Infrastructure for Modern Creators.</h1>
+                    <p class="text-slate-400 text-sm leading-relaxed">Manage link-in-bio routing, automated audience engagement pipelines, and enterprise-grade monetization from a single centralized console.</p>
                 </div>
             </div>
 
-            <div class="relative z-10 bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 flex items-center gap-4">
-                <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-12 h-12 rounded-full border-2 border-indigo-500/40 object-cover" alt="Creator">
-                <div>
-                    <p class="text-xs font-semibold text-white">"Mera poora digital store aur bookings ab automate ho gaya hai!"</p>
-                    <p class="text-[11px] text-indigo-400 mt-0.5">Priya Sharma, Content Creator</p>
-                </div>
+            <div class="border-t border-slate-800/80 pt-6 text-xs text-slate-500 font-mono flex justify-between items-center">
+                <span>SYSTEM STATUS: OPERATIONAL</span>
+                <span class="text-emerald-400 font-bold">● 99.9% SLA</span>
             </div>
         </div>
 
-        <div class="w-full lg:w-1/2 p-8 md:p-12 flex items-center justify-center bg-white">
+        <div class="w-full lg:w-1/2 p-8 md:p-12 flex items-center justify-center bg-slate-900/40">
             <div class="w-full max-w-md space-y-6">
                 
                 <div class="text-center lg:text-left">
-                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight" id="form-title">Welcome Back! 👋</h2>
-                    <p class="text-slate-500 text-xs md:text-sm mt-1" id="form-subtitle">Apne creator dashboard ko access karne ke liye login karein.</p>
+                    <h2 class="text-2xl font-bold text-white tracking-tight" id="form-title">Sign In</h2>
+                    <p class="text-slate-400 text-xs mt-1" id="form-subtitle">Enter your corporate credentials to access your tenant dashboard.</p>
                 </div>
 
                 <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-4 block">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username ya Email ID</label>
-                        <input id="login-user" type="text" placeholder="creator@gmail.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Username or Corporate Email</label>
+                        <input id="login-user" type="text" placeholder="name@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none enterprise-input transition" required>
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1.5">
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                            <button type="button" onclick="openForgotModal()" class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold transition cursor-pointer">Forgot password?</button>
+                            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Access Password</label>
+                            <button type="button" onclick="openForgotModal()" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition cursor-pointer">Forgot password?</button>
                         </div>
-                        <input id="login-pass" type="password" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                        <input id="login-pass" type="password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none enterprise-input transition" required>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 cursor-pointer text-sm">Sign In to Dashboard</button>
-                    <p class="text-center text-xs text-slate-500 mt-5">Naye creator hain? <span onclick="toggleForm()" class="text-indigo-600 hover:text-indigo-700 cursor-pointer font-bold">Create Free Account</span></p>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg transition shadow-md shadow-indigo-600/20 cursor-pointer text-xs uppercase tracking-wider">Authenticate Session</button>
+                    <p class="text-center text-xs text-slate-400 mt-5">Need a tenant account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Initialize Registration</span></p>
                 </form>
 
                 <form id="signup-form" onsubmit="handleSignupStep1(event)" class="space-y-3.5 hidden">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">First Name</label>
-                            <input id="signup-firstname" type="text" placeholder="Rahul" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                            <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">First Name</label>
+                            <input id="signup-firstname" type="text" placeholder="Alexander" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none enterprise-input transition" required>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Last Name</label>
-                            <input id="signup-lastname" type="text" placeholder="Verma" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                            <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Last Name</label>
+                            <input id="signup-lastname" type="text" placeholder="Vance" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none enterprise-input transition" required>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Email Address</label>
-                        <input id="signup-email" type="email" placeholder="rahul@creator.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required oninput="validateEmailLive()">
-                        <p id="email-warning" class="text-[11px] text-rose-500 mt-1 hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Kripya valid email ID dalein.</p>
+                        <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Business Email</label>
+                        <input id="signup-email" type="email" placeholder="name@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none enterprise-input transition" required oninput="validateEmailLive()">
+                        <p id="email-warning" class="text-[11px] text-rose-400 mt-1 hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Please provide a valid corporate email address.</p>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Contact Number</label>
+                        <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1">Contact Number</label>
                         <div class="flex gap-2">
-                            <select id="country-code" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-xs text-slate-800 font-semibold outline-none cursor-pointer">
-                                <option value="+91">🇮🇳 +91</option>
-                                <option value="+1">🇺🇸 +1</option>
-                                <option value="+44">🇬🇧 +44</option>
-                                <option value="+971">🇦🇪 +971</option>
+                            <select id="country-code" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2.5 text-xs text-slate-200 font-mono outline-none cursor-pointer">
+                                <option value="+91">+91 (IN)</option>
+                                <option value="+1">+1 (US)</option>
+                                <option value="+44">+44 (UK)</option>
+                                <option value="+971">+971 (UAE)</option>
                             </select>
-                            <input id="signup-phone" type="tel" placeholder="9876543210" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                            <input id="signup-phone" type="tel" placeholder="9876543210" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 font-mono focus:outline-none enterprise-input transition" required>
                         </div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                            <span class="text-[10px] text-slate-400 font-medium">8+ chars (A-Z, a-z, 0-9, @$!%*?&)</span>
+                            <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Passkey Credential</label>
+                            <span class="text-[10px] text-slate-500 font-mono">8-10 chars (A-Z, a-z, 0-9, @$!%*?&)</span>
                         </div>
-                        <input id="signup-pass" type="password" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" required>
+                        <input id="signup-pass" type="password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none enterprise-input transition" required>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 cursor-pointer text-sm mt-1">Send Verification OTP</button>
-                    <p class="text-center text-xs text-slate-500 mt-4">Pehle se account hai? <span onclick="toggleForm()" class="text-indigo-600 hover:text-indigo-700 cursor-pointer font-bold">Sign In</span></p>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg transition shadow-md shadow-indigo-600/20 cursor-pointer text-xs uppercase tracking-wider mt-1">Dispatch Verification Token</button>
+                    <p class="text-center text-xs text-slate-400 mt-4">Already registered? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Sign In</span></p>
                 </form>
 
                 <div id="otp-verification-box" class="hidden space-y-4 pt-2">
-                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl text-center space-y-1">
-                        <p class="text-xs text-indigo-900 font-medium">Aapke email/phone par verification code bhej diya gaya hai.</p>
-                        <p id="otp-debug-hint" class="text-xs font-mono font-bold text-emerald-600"></p>
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+                        <p class="text-xs text-slate-300 font-medium">Authentication token successfully dispatched.</p>
+                        <p id="otp-debug-hint" class="text-xs font-mono font-bold text-emerald-400"></p>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 text-center">6-Digit OTP Code Enter Karein</label>
-                        <input id="otp-input" type="text" maxlength="6" placeholder="123456" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center tracking-widest text-xl font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 text-center">Enter 6-Digit Verification Token</label>
+                        <input id="otp-input" type="text" maxlength="6" placeholder="000000" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-center tracking-widest text-xl font-mono text-white placeholder:text-slate-700 focus:outline-none enterprise-input transition" required>
                     </div>
-                    <button type="button" onclick="verifyOtpAndRegister()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/20 cursor-pointer text-sm">Verify & Complete Account</button>
+                    <button type="button" onclick="verifyOtpAndRegister()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-lg transition shadow-md shadow-emerald-600/20 cursor-pointer text-xs uppercase tracking-wider">Verify & Complete Initialization</button>
                 </div>
 
             </div>
@@ -125,33 +122,33 @@
 
     </div>
 
-    <div id="forgot-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-100 w-full max-w-md rounded-3xl p-8 shadow-2xl space-y-5 relative">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-key text-indigo-600"></i> Password Reset</h3>
-                <button onclick="closeForgotModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="forgot-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="enterprise-card w-full max-w-md rounded-2xl p-8 shadow-2xl space-y-5 relative">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h3 class="text-base font-bold text-white tracking-tight flex items-center gap-2"><i class="fa-solid fa-key text-indigo-400"></i> Corporate Recovery</h3>
+                <button onclick="closeForgotModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <div id="forgot-step-1" class="space-y-4">
-                <p class="text-xs text-slate-500 leading-relaxed">Apna registered email ya username enter karein taaki hum recovery code bhej sakein.</p>
+                <p class="text-xs text-slate-400 leading-relaxed">Provide your corporate identifier to trigger the emergency recovery token protocol.</p>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email ya Username</label>
-                    <input id="forgot-identifier" type="text" placeholder="creator@gmail.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Identifier (Email / Username)</label>
+                    <input id="forgot-identifier" type="text" placeholder="name@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white focus:outline-none enterprise-input transition" required>
                 </div>
-                <button type="button" onclick="sendResetOtp()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm transition cursor-pointer">Send Recovery Code</button>
+                <button type="button" onclick="sendResetOtp()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg text-xs uppercase tracking-wider transition cursor-pointer">Dispatch Recovery Token</button>
             </div>
 
             <div id="forgot-step-2" class="space-y-4 hidden">
-                <p class="text-xs font-mono font-bold text-emerald-600" id="forgot-otp-hint"></p>
+                <p class="text-xs font-mono font-bold text-emerald-400" id="forgot-otp-hint"></p>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">6-Digit Code</label>
-                    <input id="forgot-otp-input" type="text" maxlength="6" placeholder="123456" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-center tracking-widest text-lg font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">6-Digit Token</label>
+                    <input id="forgot-otp-input" type="text" maxlength="6" placeholder="123456" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-center tracking-widest text-lg font-mono text-white focus:outline-none enterprise-input transition" required>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Naya Password</label>
-                    <input id="forgot-new-pass" type="password" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">New Passkey</label>
+                    <input id="forgot-new-pass" type="password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none enterprise-input transition" required>
                 </div>
-                <button type="button" onclick="confirmPasswordReset()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl text-sm transition cursor-pointer">Update Password</button>
+                <button type="button" onclick="confirmPasswordReset()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-lg text-xs uppercase tracking-wider transition cursor-pointer">Override Passkey</button>
             </div>
         </div>
     </div>
@@ -176,13 +173,13 @@
             if(loginForm.classList.contains('hidden')) {
                 loginForm.classList.remove('hidden');
                 signupForm.classList.add('hidden');
-                title.innerText = "Welcome Back! 👋";
-                subtitle.innerText = "Apne creator dashboard ko access karne ke liye login karein.";
+                title.innerText = "Sign In";
+                subtitle.innerText = "Enter your corporate credentials to access your tenant dashboard.";
             } else {
                 loginForm.classList.add('hidden');
                 signupForm.classList.remove('hidden');
-                title.innerText = "Join LinkKitHub 🚀";
-                subtitle.innerText = "Apna all-in-one creator toolkit free mein shuru karein.";
+                title.innerText = "Tenant Registration";
+                subtitle.innerText = "Initialize your secure creator infrastructure account.";
             }
         }
 
@@ -202,7 +199,7 @@
             const pass = document.getElementById('signup-pass').value;
             const strictRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
             if(!strictRegex.test(pass)) {
-                alert("Password criteria match nahi ho raha: Minimum 8 characters, 1 Uppercase, 1 Lowercase, 1 Number aur 1 Special character (@$!%*?&) zaroori hai.");
+                alert("Passkey security requirements unmet: Minimum 8 characters, 1 Uppercase, 1 Lowercase, 1 Number, and 1 Special character.");
                 return;
             }
 
@@ -226,11 +223,11 @@
                     activeGeneratedOtp = data.debug_otp;
                     document.getElementById('signup-form').classList.add('hidden');
                     document.getElementById('otp-verification-box').classList.remove('hidden');
-                    document.getElementById('otp-debug-hint').innerText = `[Testing OTP Code]: ${activeGeneratedOtp}`;
+                    document.getElementById('otp-debug-hint').innerText = `[Token Simulation]: ${activeGeneratedOtp}`;
                 } else {
-                    alert("Signup Failed: " + JSON.stringify(data.detail));
+                    alert("Registration Rejected: " + JSON.stringify(data.detail));
                 }
-            } catch(e) { alert("Server connection error."); }
+            } catch(e) { alert("Server communication error during initialization."); }
         }
 
         async function verifyOtpAndRegister() {
@@ -249,10 +246,10 @@
                     try { result = JSON.parse(rawText); } catch (err) { result = { detail: rawText }; }
                     
                     if (response.ok) {
-                        alert(`Account successfully verified!\nAapka unique username hai: @${result.assigned_username}\nAb aap sign in kar sakte hain.`);
+                        alert(`Tenant registered successfully!\nAssigned Username Handle: @${result.assigned_username}\nPlease proceed to sign in.`);
                         toggleForm();
                     } else {
-                        let errorMessage = "Registration failed.";
+                        let errorMessage = "Registration validation failed.";
                         if (result && result.detail) {
                             errorMessage = typeof result.detail === 'string' ? result.detail : JSON.stringify(result.detail);
                         } else {
@@ -264,7 +261,7 @@
                     alert("Critical Error: Unable to establish database communication.");
                 }
             } else {
-                alert("Invalid verification code! Kripya sahi OTP enter karein.");
+                alert("Authentication Mismatch: Provided authorization token is invalid.");
             }
         }
 
@@ -284,8 +281,8 @@
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('plan', data.plan || 'free');
                     window.location.href = "dashboard.html";
-                } else { alert("Login Failed: " + data.detail); }
-            } catch (err) { alert("Server connection error."); }
+                } else { alert("Access Denied: " + data.detail); }
+            } catch (err) { alert("Server communication error."); }
         }
 
         function openForgotModal() { document.getElementById('forgot-modal').classList.remove('hidden'); }
@@ -297,7 +294,7 @@
 
         async function sendResetOtp() {
             const identifier = document.getElementById('forgot-identifier').value;
-            if(!identifier) { alert("Kripya apna email ya username enter karein."); return; }
+            if(!identifier) { alert("Please provide your corporate identifier."); return; }
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
@@ -308,9 +305,9 @@
                 if(res.ok) {
                     document.getElementById('forgot-step-1').classList.add('hidden');
                     document.getElementById('forgot-step-2').classList.remove('hidden');
-                    document.getElementById('forgot-otp-hint').innerText = `[Recovery OTP Code]: ${data.debug_otp}`;
+                    document.getElementById('forgot-otp-hint').innerText = `[Recovery Simulation Token]: ${data.debug_otp}`;
                 } else { alert("Error: " + data.detail); }
-            } catch(e) { alert("Server error."); }
+            } catch(e) { alert("Server communication error."); }
         }
 
         async function confirmPasswordReset() {
@@ -318,7 +315,7 @@
             const code = document.getElementById('forgot-otp-input').value;
             const newPass = document.getElementById('forgot-new-pass').value;
 
-            if(!code || !newPass) { alert("Sabhi fields bharein."); return; }
+            if(!code || !newPass) { alert("Please complete all required fields."); return; }
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
@@ -326,9 +323,9 @@
                     body: JSON.stringify({ email: email, otp_code: code, new_password: newPass })
                 });
                 if(res.ok) {
-                    alert("Password successfully reset! Ab aap naye password se login kar sakte hain.");
+                    alert("Passkey successfully overridden! You may now authenticate.");
                     closeForgotModal();
-                } else { alert("Failed to reset password."); }
+                } else { alert("Failed to override passkey."); }
             } catch(e) { alert("Server error."); }
         }
     </script>
