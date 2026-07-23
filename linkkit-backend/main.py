@@ -652,47 +652,52 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         conn.close()
 
 # ========================================================
-# 👑 SUPER ADMIN CONTROL ROOM APIS
+# 👑 ENHANCED SUPER ADMIN & AUTHENTICATION APIs
 # ========================================================
-@app.get("/api/admin/stats")
-async def get_super_admin_stats():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT COUNT(*) FROM users")
-    total_users = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT SUM(amount) FROM transactions")
-    total_rev = cursor.fetchone()[0] or 0.0
-    
-    cursor.execute("SELECT COUNT(*) FROM link_in_bio")
-    total_links = cursor.fetchone()[0]
-    
-    conn.close()
-    return {
-        "total_creators": total_users,
-        "total_platform_revenue": round(total_rev, 2),
-        "total_links_created": total_links
-    }
 
-@app.get("/api/admin/users")
-async def get_all_users():
+@app.get("/api/admin/users-detailed")
+async def get_all_users_detailed():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email, plan_type FROM users ORDER BY id DESC")
-    users = [{"id": row[0], "username": row[1], "email": row[2], "plan": row[3].upper()} for row in cursor.fetchall()]
+    # Fetching complete registered profile details for administrative auditing
+    cursor.execute("""
+        SELECT u.id, u.username, u.email, u.plan_type, p.bio_title, p.theme 
+        FROM users u 
+        LEFT JOIN profile_settings p ON u.id = p.user_id 
+        ORDER BY u.id DESC
+    """)
+    users = [{
+        "id": row[0],
+        "username": row[1],
+        "email": row[2],
+        "plan": row[3].upper(),
+        "bio_title": row[4] or "Not Configured",
+        "theme": row[5] or "default"
+    } for row in cursor.fetchall()]
     conn.close()
     return users
 
-@app.delete("/api/admin/users/{user_id}")
-async def ban_user(user_id: int):
+@app.delete("/api/admin/users/purge/{user_id}")
+async def purge_user_completely(user_id: int):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-    conn.commit()
-    conn.close()
-    return {"status": "SUCCESS", "message": "User banned from platform."}
- 
+    try:
+        # Cascading deletion across all relational partitions
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        cursor.execute("DELETE FROM profile_settings WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM keyword_rules WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM link_in_bio WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM digital_products WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM leads WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM bookings WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM transactions WHERE user_id = ?", (user_id,))
+        conn.commit()
+        conn.close()
+        return {"status": "SUCCESS", "message": "User entity and associated records purged successfully."}
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=str(e))
+     
 # ========================================================
 # 💳 PAYMENT GATEWAY & PRO UPGRADE API
 # ========================================================

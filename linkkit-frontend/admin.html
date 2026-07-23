@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkKitHub - Super Admin Control</title>
+    <title>LinkKitHub - Enterprise Super Admin Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -11,49 +11,49 @@
 
     <header class="bg-gray-900 border-b border-gray-800 px-8 py-4 flex justify-between items-center sticky top-0 z-40">
         <div class="flex items-center gap-3">
-            <i class="fa-solid fa-crown text-yellow-500 text-2xl"></i>
-            <h1 class="text-2xl font-black text-white tracking-widest">SUPER ADMIN <span class="text-indigo-500">HQ</span></h1>
+            <i class="fa-solid fa-shield-halved text-yellow-500 text-2xl"></i>
+            <h1 class="text-xl font-black text-white tracking-widest uppercase">ENTERPRISE ADMIN <span class="text-indigo-500">CONSOLE</span></h1>
         </div>
-        <button onclick="window.location.href='index.html'" class="text-gray-400 hover:text-white transition">Exit Admin</button>
+        <button onclick="window.location.href='index.html'" class="text-gray-400 hover:text-white text-xs font-semibold uppercase tracking-wider transition">Terminate Session</button>
     </header>
 
     <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 flex items-center justify-between shadow-xl">
-                <div><p class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Creators</p><h3 id="stat-creators" class="text-4xl font-black text-white mt-2">0</h3></div>
-                <div class="p-4 bg-blue-500/10 rounded-lg text-blue-400 border border-blue-500/20"><i class="fa-solid fa-users text-3xl"></i></div>
+                <div><p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Registered Tenants</p><h3 id="stat-creators" class="text-4xl font-black text-white mt-2">0</h3></div>
+                <div class="p-4 bg-blue-500/10 rounded-lg text-blue-400 border border-blue-500/20"><i class="fa-solid fa-users text-2xl"></i></div>
             </div>
             
-            <div class="bg-gray-900 p-6 rounded-xl border border-emerald-900 shadow-xl flex items-center justify-between">
-                <div><p class="text-sm font-bold text-emerald-500 uppercase tracking-wider">Total Platform Economy</p><h3 id="stat-revenue" class="text-4xl font-black text-white mt-2">$0.00</h3></div>
-                <div class="p-4 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-sack-dollar text-3xl"></i></div>
+            <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 shadow-xl flex items-center justify-between">
+                <div><p class="text-xs font-bold text-emerald-500 uppercase tracking-wider">Gross Platform Revenue</p><h3 id="stat-revenue" class="text-4xl font-black text-white mt-2">$0.00</h3></div>
+                <div class="p-4 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20"><i class="fa-solid fa-chart-line text-2xl"></i></div>
             </div>
             
             <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 flex items-center justify-between shadow-xl">
-                <div><p class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Active Links</p><h3 id="stat-links" class="text-4xl font-black text-white mt-2">0</h3></div>
-                <div class="p-4 bg-purple-500/10 rounded-lg text-purple-400 border border-purple-500/20"><i class="fa-solid fa-link text-3xl"></i></div>
+                <div><p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Deployed Bio Endpoints</p><h3 id="stat-links" class="text-4xl font-black text-white mt-2">0</h3></div>
+                <div class="p-4 bg-purple-500/10 rounded-lg text-purple-400 border border-purple-500/20"><i class="fa-solid fa-network-wired text-2xl"></i></div>
             </div>
         </div>
 
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-8 shadow-2xl space-y-6">
             <div class="flex justify-between items-center border-b border-gray-800 pb-4">
-                <h2 class="text-xl font-bold text-white"><i class="fa-solid fa-database text-indigo-400 mr-2"></i> Creator Database Registry</h2>
-                <button onclick="fetchAdminData()" class="text-indigo-400 text-sm font-bold hover:text-indigo-300"><i class="fa-solid fa-rotate mr-1"></i> Refresh Data</button>
+                <h2 class="text-lg font-bold text-white uppercase tracking-wider"><i class="fa-solid fa-database text-indigo-400 mr-2"></i> Tenant Directory Registry</h2>
+                <button onclick="fetchAdminData()" class="text-indigo-400 text-xs font-bold uppercase tracking-wider hover:text-indigo-300 transition"><i class="fa-solid fa-rotate mr-1"></i> Synchronize Registry</button>
             </div>
             
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-800 text-gray-400 text-sm font-bold uppercase tracking-wider">
-                            <th class="pb-3 px-2">ID</th>
-                            <th class="pb-3 px-2">Username</th>
-                            <th class="pb-3 px-2">Registered Email</th>
-                            <th class="pb-3 px-2">Plan Tier</th>
-                            <th class="pb-3 px-2 text-right">Admin Action</th>
+                        <tr class="border-b border-gray-800 text-gray-400 text-xs font-bold uppercase tracking-wider">
+                            <th class="pb-3 px-3">UID</th>
+                            <th class="pb-3 px-3">Tenant Username</th>
+                            <th class="pb-3 px-3">Primary Email Identifier</th>
+                            <th class="pb-3 px-3">Subscription Tier</th>
+                            <th class="pb-3 px-3 text-right">Administrative Action</th>
                         </tr>
                     </thead>
-                    <tbody id="users-table-body" class="divide-y divide-gray-800 text-sm">
+                    <tbody id="users-table-body" class="divide-y divide-gray-800 text-sm font-mono">
                         </tbody>
                 </table>
             </div>
@@ -61,63 +61,92 @@
 
     </main>
 
-    <script>
-        const BACKEND_URL = "https://linkkithub.onrender.com"; 
+    <div id="user-details-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider"><i class="fa-solid fa-id-card text-indigo-400 mr-2"></i> Tenant Profile Audit</h3>
+                <button onclick="closeAuditModal()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="modal-tenant-content" class="space-y-3 text-sm text-gray-300 font-mono">
+                </div>
+        </div>
+    </div>
 
-        // 🛑 Secret Security Pin! (Mazaak ke liye)
-        const pin = prompt("Enter Super Admin PIN:");
-        if (pin === "7777") { // Tumhara secret password 7777 hai
+    <script>
+        const BACKEND_URL = "https://linkkithub.onrender.com";
+
+        const securityPin = prompt("Enter Super Admin Security Authentication PIN:");
+        if (securityPin === "7777") {
             document.getElementById('admin-body').classList.remove('hidden');
             fetchAdminData();
         } else {
-            alert("Access Denied! Tum hacker lagte ho 🤨");
-            window.location.href = "index.html"; // Galat pin pe home page par bhej dega
+            alert("Authentication Failure: Unauthorized access attempt detected.");
+            window.location.href = "index.html";
         }
 
         async function fetchAdminData() {
-            // Stats Load karo
             try {
                 const statRes = await fetch(`${BACKEND_URL}/api/admin/stats`);
                 const statData = await statRes.json();
                 document.getElementById('stat-creators').innerText = statData.total_creators;
                 document.getElementById('stat-revenue').innerText = `$${statData.total_platform_revenue.toFixed(2)}`;
                 document.getElementById('stat-links').innerText = statData.total_links_created;
-            } catch (e) { console.error("Stats Error", e); }
+            } catch (e) { console.error("Metrics Synchronization Error", e); }
 
-            // Users Table Load karo
             try {
-                const userRes = await fetch(`${BACKEND_URL}/api/admin/users`);
+                const userRes = await fetch(`${BACKEND_URL}/api/admin/users-detailed`);
                 const users = await userRes.json();
                 const tbody = document.getElementById('users-table-body');
                 tbody.innerHTML = '';
 
                 users.forEach(user => {
-                    const planColor = user.plan === 'PRO' ? 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' : 'text-gray-400 bg-gray-800 border-gray-700';
+                    const badgeColor = user.plan === 'PRO' ? 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' : 'text-gray-400 bg-gray-800 border-gray-700';
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-gray-800/30 transition';
                     row.innerHTML = `
-                        <td class="py-4 px-2 text-gray-500 font-mono">#${user.id}</td>
-                        <td class="py-4 px-2 font-bold text-indigo-400">@${user.username}</td>
-                        <td class="py-4 px-2 text-gray-300 font-mono text-xs">${user.email}</td>
-                        <td class="py-4 px-2"><span class="px-2 py-1 rounded text-xs font-bold border ${planColor}">${user.plan}</span></td>
-                        <td class="py-4 px-2 text-right">
-                            <button onclick="banUser(${user.id}, '${user.username}')" class="bg-red-900/50 hover:bg-red-900 text-red-400 px-3 py-1.5 rounded text-xs font-bold transition">Ban Creator</button>
+                        <td class="py-4 px-3 text-gray-500">#${user.id}</td>
+                        <td class="py-4 px-3 font-bold text-indigo-400 cursor-pointer hover:underline" onclick='inspectTenant(${JSON.stringify(user)})'>@${user.username}</td>
+                        <td class="py-4 px-3 text-gray-300 text-xs">${user.email}</td>
+                        <td class="py-4 px-3"><span class="px-2 py-1 rounded text-xs font-bold border ${badgeColor}">${user.plan}</span></td>
+                        <td class="py-4 px-3 text-right">
+                            <button onclick="purgeTenant(${user.id}, '${user.username}')" class="bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-800/50 px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition cursor-pointer">Purge Entity</button>
                         </td>
                     `;
                     tbody.appendChild(row);
                 });
-            } catch (e) { console.error("Users Error", e); }
+            } catch (e) { console.error("Registry Fetch Error", e); }
         }
 
-        async function banUser(userId, username) {
-            if(!confirm(`⚠️ WARNING! Are you sure you want to completely BAN creator @${username}?`)) return;
+        function inspectTenant(user) {
+            const container = document.getElementById('modal-tenant-content');
+            container.innerHTML = `
+                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-2">
+                    <p><strong class="text-gray-400 uppercase text-xs">Tenant Identifier ID:</strong> #${user.id}</p>
+                    <p><strong class="text-gray-400 uppercase text-xs">Username Handle:</strong> @${user.username}</p>
+                    <p><strong class="text-gray-400 uppercase text-xs">Registered Email:</strong> ${user.email}</p>
+                    <p><strong class="text-gray-400 uppercase text-xs">Subscription Tier:</strong> ${user.plan}</p>
+                    <p><strong class="text-gray-400 uppercase text-xs">Configured Bio Title:</strong> ${user.bio_title}</p>
+                    <p><strong class="text-gray-400 uppercase text-xs">Selected Interface Theme:</strong> ${user.theme}</p>
+                </div>
+            `;
+            document.getElementById('user-details-modal').classList.remove('hidden');
+        }
+
+        function closeAuditModal() {
+            document.getElementById('user-details-modal').classList.add('hidden');
+        }
+
+        async function purgeTenant(userId, username) {
+            if(!confirm(`CRITICAL WARNING: Are you certain you want to completely purge tenant @${username} and all associated relational records? This action is irreversible.`)) return;
             try {
-                const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}`, { method: 'DELETE' });
+                const res = await fetch(`${BACKEND_URL}/api/admin/users/purge/${userId}`, { method: 'DELETE' });
                 if (res.ok) {
-                    alert(`Creator @${username} has been eliminated. 💀`);
+                    alert(`Tenant @${username} has been completely purged from the database.`);
                     fetchAdminData();
+                } else {
+                    alert("Purge operation failed.");
                 }
-            } catch (e) { alert("Error banning user"); }
+            } catch (e) { alert("Server communication error during database purge."); }
         }
     </script>
 </body>
