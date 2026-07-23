@@ -243,7 +243,6 @@
     
     if (userEnteredOtp === activeGeneratedOtp) {
         try {
-            // Dispatching the complete validated tenant payload to the backend persistence layer
             const response = await fetch(`${BACKEND_URL}/api/auth/advanced-signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -253,7 +252,7 @@
             const result = await response.json();
             
             if (response.ok) {
-                alert("Account verified and registered successfully. Please proceed to sign in.");
+                alert(`Account verified successfully!\nYour generated username is: @${result.assigned_username}\nPlease use this username to sign in.`);
                 toggleForm();
             } else {
                 alert("Registration Failed: " + (result.detail || "Database constraint violation."));
