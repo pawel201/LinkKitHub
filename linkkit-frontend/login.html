@@ -249,20 +249,29 @@
                 body: JSON.stringify(tempSignupData)
             });
             
-            const result = await response.json();
+            // Response ko text format mein read karenge pehle (Taki object error ka chakkar hi khatam ho jaye)
+            const rawText = await response.text();
+            let result;
+            try {
+                result = JSON.parse(rawText);
+            } catch (err) {
+                result = { detail: rawText };
+            }
             
             if (response.ok) {
                 alert(`Account verified successfully!\nYour assigned username is: @${result.assigned_username}\nPlease proceed to sign in.`);
                 toggleForm();
             } else {
-                // Error handling ko fix kiya gaya hai taaki [object Object] na aaye
+                // Completely safe string extraction
                 let errorMessage = "Registration validation failed.";
-                if (result.detail) {
-                    if (typeof result.detail === 'object') {
-                        errorMessage = JSON.stringify(result.detail);
-                    } else {
+                if (result && result.detail) {
+                    if (typeof result.detail === 'string') {
                         errorMessage = result.detail;
+                    } else {
+                        errorMessage = JSON.stringify(result.detail);
                     }
+                } else {
+                    errorMessage = rawText;
                 }
                 alert("Signup Failed: " + errorMessage);
             }
