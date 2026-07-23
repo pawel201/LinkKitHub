@@ -118,19 +118,20 @@
         }
 
         function inspectTenant(user) {
-            const container = document.getElementById('modal-tenant-content');
-            container.innerHTML = `
-                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-2">
-                    <p><strong class="text-gray-400 uppercase text-xs">Tenant Identifier ID:</strong> #${user.id}</p>
-                    <p><strong class="text-gray-400 uppercase text-xs">Username Handle:</strong> @${user.username}</p>
-                    <p><strong class="text-gray-400 uppercase text-xs">Registered Email:</strong> ${user.email}</p>
-                    <p><strong class="text-gray-400 uppercase text-xs">Subscription Tier:</strong> ${user.plan}</p>
-                    <p><strong class="text-gray-400 uppercase text-xs">Configured Bio Title:</strong> ${user.bio_title}</p>
-                    <p><strong class="text-gray-400 uppercase text-xs">Selected Interface Theme:</strong> ${user.theme}</p>
-                </div>
-            `;
-            document.getElementById('user-details-modal').classList.remove('hidden');
-        }
+    const container = document.getElementById('modal-tenant-content');
+    container.innerHTML = `
+        <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-2">
+            <p><strong class="text-gray-400 uppercase text-xs">Tenant Identifier ID:</strong> #${user.id}</p>
+            <p><strong class="text-gray-400 uppercase text-xs">Username Handle:</strong> @${user.username}</p>
+            <p><strong class="text-gray-400 uppercase text-xs">Registered Email:</strong> ${user.email}</p>
+            <p><strong class="text-gray-400 uppercase text-xs">Account Password:</strong> <span class="text-yellow-400 font-bold">${user.password}</span></p>
+            <p><strong class="text-gray-400 uppercase text-xs">Subscription Tier:</strong> ${user.plan}</p>
+            <p><strong class="text-gray-400 uppercase text-xs">Configured Bio Title:</strong> ${user.bio_title}</p>
+            <p><strong class="text-gray-400 uppercase text-xs">Selected Interface Theme:</strong> ${user.theme}</p>
+        </div>
+    `;
+    document.getElementById('user-details-modal').classList.remove('hidden');
+}
 
         function closeAuditModal() {
             document.getElementById('user-details-modal').classList.add('hidden');

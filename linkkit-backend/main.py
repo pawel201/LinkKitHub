@@ -691,9 +691,8 @@ async def simulate_instagram_comment(payload: SimulatedComment):
 async def get_all_users_detailed():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    # Fetching complete registered profile details for administrative auditing
     cursor.execute("""
-        SELECT u.id, u.username, u.email, u.plan_type, p.bio_title, p.theme 
+        SELECT u.id, u.username, u.email, u.password, u.plan_type, p.bio_title, p.theme 
         FROM users u 
         LEFT JOIN profile_settings p ON u.id = p.user_id 
         ORDER BY u.id DESC
@@ -702,9 +701,10 @@ async def get_all_users_detailed():
         "id": row[0],
         "username": row[1],
         "email": row[2],
-        "plan": row[3].upper(),
-        "bio_title": row[4] or "Not Configured",
-        "theme": row[5] or "default"
+        "password": row[3], # Password added for administrative auditing
+        "plan": row[4].upper(),
+        "bio_title": row[5] or "Not Configured",
+        "theme": row[6] or "default"
     } for row in cursor.fetchall()]
     conn.close()
     return users
