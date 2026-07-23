@@ -682,8 +682,18 @@ async def purge_user_completely(user_id: int):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     try:
-        # Cascading deletion across all relational partitions
-        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        # Foreign key constraints enable karke saari tables se user ka data completely wipe karna
+        cursor.execute("PRAGMA foreign_keys = ON;")
+        
+        # Pehle user ka username aur email retrieve kar lete hain audit ke liye agar zaroorat ho
+        cursor.execute("SELECT username, email FROM users WHERE id = ?", (user_id,))
+        user_record = cursor.fetchone()
+        
+        if not user_record:
+            conn.close()
+            raise HTTPException(status_code=404, detail="User entity not found.")
+
+        # Delete from all related partitions explicitly to avoid integrity lock
         cursor.execute("DELETE FROM profile_settings WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM keyword_rules WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM link_in_bio WHERE user_id = ?", (user_id,))
@@ -691,13 +701,21 @@ async def purge_user_completely(user_id: int):
         cursor.execute("DELETE FROM leads WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM bookings WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM transactions WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM email_logs WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM custom_domains WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM link_clicks WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM analytics WHERE user_id = ?", (user_id,))
+        
+        # Finally delete from main users table
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        
         conn.commit()
         conn.close()
-        return {"status": "SUCCESS", "message": "User entity and associated records purged successfully."}
+        return {"status": "SUCCESS", "message": "User entity and complete relational registry successfully purged."}
     except Exception as e:
         conn.close()
         raise HTTPException(status_code=500, detail=str(e))
-     
+        
 # ========================================================
 # 💳 PAYMENT GATEWAY & PRO UPGRADE API
 # ========================================================
