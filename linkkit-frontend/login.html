@@ -1,194 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>LinkKitHub - AI Neural Auth Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkKitHub | Executive Auth Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.35), inset 0 0 15px rgba(99, 102, 241, 0.15); }
-            50% { box-shadow: 0 0 55px rgba(168, 85, 247, 0.6), inset 0 0 25px rgba(168, 85, 247, 0.3); }
-        }
-        @keyframes float-node {
-            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
-            50% { transform: translateY(-20px) rotate(180deg) scale(1.05); }
-        }
-        @keyframes ring-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes grid-move {
-            0% { background-position: 0 0; }
-            100% { background-position: 60px 60px; }
-        }
-        .quantum-card {
-            background: rgba(13, 17, 23, 0.82);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(99, 102, 241, 0.35);
-            animation: pulse-glow 6s infinite ease-in-out;
-        }
-        .cyber-grid {
-            background-image: linear-gradient(to right, rgba(99, 102, 241, 0.04) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: grid-move 25s linear infinite;
-        }
-        .floating-ai-core {
-            animation: float-node 8s infinite ease-in-out;
-        }
-        .orbit-ring {
-            animation: ring-spin 15s linear infinite;
-        }
-        .neon-input:focus {
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
-            border-color: rgba(99, 102, 241, 0.9);
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .bg-auth { background-color: #0B1120; }
+        .panel-gradient { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); }
+        .auth-card { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(56, 189, 248, 0.15); }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex items-center justify-between p-6 lg:p-12 relative overflow-hidden cyber-grid">
+<body class="bg-auth text-slate-200 min-h-screen flex items-center justify-center p-4 lg:p-6">
 
-    <div class="absolute -top-32 left-1/4 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none"></div>
-    <div class="absolute -bottom-32 right-1/4 w-[500px] h-[500px] bg-fuchsia-600/15 rounded-full blur-[140px] pointer-events-none"></div>
-
-    <div class="hidden lg:flex flex-col items-start justify-center space-y-8 z-10 max-w-lg pl-8">
+    <div class="w-full max-w-6xl min-h-[650px] panel-gradient rounded-3xl shadow-2xl flex overflow-hidden border border-slate-800">
         
-        <div class="relative w-44 h-44 flex items-center justify-center floating-ai-core">
-            <div class="absolute inset-0 rounded-full border border-indigo-500/30 orbit-ring"></div>
-            <div class="absolute inset-3 rounded-full border border-dashed border-fuchsia-500/40 orbit-ring" style="animation-direction: reverse; animation-duration: 20s;"></div>
-            <div class="absolute w-24 h-24 bg-gradient-to-tr from-indigo-600/30 to-fuchsia-600/30 rounded-full blur-xl"></div>
-            <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-fuchsia-600 flex items-center justify-center shadow-2xl shadow-indigo-500/50 text-white">
-                <i class="fa-solid fa-brain text-3xl animate-pulse"></i>
-            </div>
-        </div>
-
-        <div class="space-y-3">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/85 border border-indigo-500/30 text-indigo-400 font-mono text-xs tracking-wider">
-                <i class="fa-solid fa-microchip animate-spin"></i> <span id="terminal-badge-text">NEURAL AI GATEWAY ACTIVE</span>
-            </div>
-            <h1 class="text-4xl font-black tracking-tight text-white uppercase">LinkKitHub <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400">Intelligence</span></h1>
-            <p class="text-sm font-mono text-slate-400 leading-relaxed">Autonomous creator toolkit architecture powered by decentralized neural networks and multi-tenant cloud pipelines.</p>
-        </div>
-    </div>
-
-    <div class="w-full max-w-md quantum-card rounded-3xl p-8 shadow-2xl relative z-10 ml-auto mr-4 lg:mr-16">
-        
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-fuchsia-600 text-white shadow-lg shadow-indigo-500/30 mb-2">
-                <i class="fa-solid fa-cube text-xl"></i>
-            </div>
-            <h2 class="text-2xl font-black tracking-wider text-white uppercase" id="form-title">Welcome Back</h2>
-            <p class="text-xs font-mono text-indigo-300 tracking-wider mt-1 uppercase" id="form-subtitle">Enter your credentials to access the console.</p>
-        </div>
-
-        <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-4 block">
+        <div class="hidden lg:flex w-1/2 p-12 flex-col justify-between border-r border-slate-800">
             <div>
-                <label class="block text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest mb-1">Username or Email</label>
-                <input id="login-user" type="text" placeholder="creator_nexus" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 neon-input transition outline-none font-mono" required>
-            </div>
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <label class="block text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest">Password</label>
-                    <button type="button" onclick="openForgotModal()" class="text-[10px] font-mono text-fuchsia-400 hover:text-fuchsia-300 font-semibold cursor-pointer transition">Forgot Password?</button>
+                <div class="flex items-center gap-3 mb-16">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white shadow-lg">
+                        <i class="fa-solid fa-circle-nodes"></i>
+                    </div>
+                    <span class="text-xl font-black text-white tracking-tight">LinkKitHub</span>
                 </div>
-                <input id="login-pass" type="password" placeholder="••••••••••••" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 neon-input transition outline-none font-mono" required>
-            </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 cursor-pointer uppercase text-xs tracking-widest mt-2">Sign In</button>
-            <p class="text-center text-xs font-mono text-slate-400 mt-4">Don't have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-bold">Sign Up</span></p>
-        </form>
-
-        <form id="signup-form" onsubmit="handleSignupStep1(event)" class="space-y-4 hidden">
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest mb-1">First Name</label>
-                    <input id="signup-firstname" type="text" placeholder="Alex" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 neon-input transition outline-none font-mono" required>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest mb-1">Last Name</label>
-                    <input id="signup-lastname" type="text" placeholder="Vance" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-600 neon-input transition outline-none font-mono" required>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest mb-1">Email Address</label>
-                <input id="signup-email" type="email" placeholder="name@domain.com" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 neon-input transition outline-none font-mono" required oninput="validateEmailLive()">
-                <p id="email-warning" class="text-[10px] font-mono text-rose-400 mt-1 hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Please enter a valid email address.</p>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest mb-1">Contact Number</label>
-                <div class="flex gap-2">
-                    <select id="country-code" class="bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white font-mono outline-none cursor-pointer">
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+61">🇦🇺 +61</option>
-                    </select>
-                    <input id="signup-phone" type="tel" placeholder="9876543210" class="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 font-mono neon-input transition outline-none" required>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest mb-1">Password</label>
-                <input id="signup-pass" type="password" placeholder="••••••••••••" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 neon-input transition outline-none font-mono" required oninput="checkPasswordRules()">
                 
-                <div class="mt-2 text-[10px] font-mono space-y-1 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                    <p id="rule-len" class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> At least 8-10 characters</p>
-                    <p id="rule-upper" class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Uppercase letter (A-Z)</p>
-                    <p id="rule-lower" class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Lowercase letter (a-z)</p>
-                    <p id="rule-num" class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Number (0-9)</p>
-                    <p id="rule-special" class="text-rose-400"><i class="fa-solid fa-circle-xmark mr-1"></i> 1 Special character (@$!%*?&)</p>
+                <div class="space-y-6">
+                    <h1 class="text-4xl font-extrabold text-white leading-tight tracking-tight">Build Your <span class="text-sky-400">Creator Empire</span></h1>
+                    <p class="text-slate-400 text-base max-w-md leading-relaxed">An all-in-one integrated toolkit designed for professional creators to manage their audience, content monetization, and business growth securely.</p>
                 </div>
             </div>
 
-            <button type="submit" id="send-otp-btn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/30 cursor-pointer uppercase text-xs tracking-widest mt-2">Send Verification Code</button>
-            <p class="text-center text-xs font-mono text-slate-400 mt-3">Already have an account? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-bold">Sign In</span></p>
-        </form>
+            <div class="auth-card p-6 rounded-2xl border border-slate-800 space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-lg">MC</div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">"LinkKitHub consolidated my entire workflow seamlessly."</p>
+                        <p class="text-xs text-slate-400 mt-1">Marcus Chen, Digital Strategist</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <div id="otp-verification-box" class="hidden space-y-4 pt-2">
-            <div class="bg-indigo-950/40 border border-indigo-500/40 p-4 rounded-xl text-center space-y-1">
-                <p class="text-[11px] font-mono text-indigo-300">Verification OTP sent to your email/phone simulation log.</p>
-                <p id="otp-debug-hint" class="text-xs font-mono font-bold text-emerald-400"></p>
+        <div class="w-full lg:w-1/2 p-8 md:p-12 flex items-center justify-center">
+            <div class="w-full max-w-md space-y-8">
+                
+                <div class="text-center lg:text-left">
+                    <h2 class="text-3xl font-bold text-white tracking-tight" id="form-title">Executive Access</h2>
+                    <p class="text-slate-400 text-sm mt-1.5" id="form-subtitle">Securely authenticate to manage your platform ecosystem.</p>
+                </div>
+
+                <form id="login-form" onsubmit="handleAuth(event, 'login')" class="space-y-5 block">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Username or Email</label>
+                        <input id="login-user" type="text" placeholder="name@company.com" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-5 py-3.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Passkey Credential</label>
+                            <button type="button" onclick="openForgotModal()" class="text-xs text-sky-400 hover:text-sky-300 font-medium transition cursor-pointer">Forgot credentials?</button>
+                        </div>
+                        <input id="login-pass" type="password" placeholder="Enter your secure passkey" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-5 py-3.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" required>
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-indigo-900/20 cursor-pointer text-sm tracking-wide">Authenticate & Sign In</button>
+                    <p class="text-center text-sm text-slate-400 mt-6">New executive partner? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Initialize Account</span></p>
+                </form>
+
+                <form id="signup-form" onsubmit="handleSignupStep1(event)" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">First Name</label>
+                            <input id="signup-firstname" type="text" placeholder="John" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Last Name</label>
+                            <input id="signup-lastname" type="text" placeholder="Doe" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Corporate Email</label>
+                        <input id="signup-email" type="email" placeholder="name@yourbrand.com" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required oninput="validateEmailLive()">
+                        <p id="email-warning" class="text-xs text-rose-400 mt-1 hidden"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Please provide a valid business email.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Mobile Contact</label>
+                        <div class="flex gap-2">
+                            <select id="country-code" class="bg-slate-900/80 border border-slate-700/80 rounded-xl px-3 py-3 text-xs text-white outline-none cursor-pointer font-medium">
+                                <option value="+91">IN (+91)</option>
+                                <option value="+1">US (+1)</option>
+                                <option value="+44">UK (+44)</option>
+                                <option value="+971">UAE (+971)</option>
+                            </select>
+                            <input id="signup-phone" type="tel" placeholder="9876543210" class="flex-1 bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">New Passkey Credential</label>
+                        <input id="signup-pass" type="password" placeholder="Create secure passkey" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required oninput="checkPasswordRules()">
+                        <div class="mt-2 text-xs space-y-1 font-mono bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 text-slate-500">
+                            <p id="rule-len" class="flex items-center gap-1"><i class="fa-solid fa-xmark text-rose-500"></i> Min 8-12 characters</p>
+                            <p id="rule-upper" class="flex items-center gap-1"><i class="fa-solid fa-xmark text-rose-500"></i> 1 Uppercase (A-Z)</p>
+                            <p id="rule-lower" class="flex items-center gap-1"><i class="fa-solid fa-xmark text-rose-500"></i> 1 Lowercase (a-z)</p>
+                            <p id="rule-num" class="flex items-center gap-1"><i class="fa-solid fa-xmark text-rose-500"></i> 1 Numeric (0-9)</p>
+                            <p id="rule-special" class="flex items-center gap-1"><i class="fa-solid fa-xmark text-rose-500"></i> 1 Special character</p>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-emerald-900/20 cursor-pointer text-sm tracking-wide mt-2">Initialize & Send OTP</button>
+                    <p class="text-center text-sm text-slate-400 mt-4">Already hold credentials? <span onclick="toggleForm()" class="text-indigo-400 hover:text-indigo-300 cursor-pointer font-semibold">Back to Sign In</span></p>
+                </form>
+
+                <div id="otp-verification-box" class="hidden space-y-4 pt-2">
+                    <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-xl text-center space-y-1.5">
+                        <p class="text-sm text-white font-medium">Secure authentication token dispatched.</p>
+                        <p id="otp-debug-hint" class="text-xs font-mono font-bold text-emerald-400"></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 text-center">Enter 6-Digit Authorization Token</label>
+                        <input id="otp-input" type="text" maxlength="6" placeholder="000000" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl px-4 py-3 text-center tracking-widest text-xl font-mono text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition" required>
+                    </div>
+                    <button type="button" onclick="verifyOtpAndRegister()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl transition shadow-lg shadow-emerald-900/20 cursor-pointer text-sm tracking-wide">Verify Credentials & Activate</button>
+                </div>
+
             </div>
-            <div>
-                <label class="block text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-widest mb-1 text-center">Enter 6-Digit OTP Code</label>
-                <input id="otp-input" type="text" maxlength="6" placeholder="000000" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-center tracking-[0.5em] text-xl font-mono text-white placeholder-slate-700 neon-input transition outline-none" required>
-            </div>
-            <button type="button" onclick="verifyOtpAndRegister()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-emerald-600/30 cursor-pointer uppercase text-xs tracking-widest">Verify & Complete Registration</button>
         </div>
 
     </div>
 
-    <div id="forgot-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="quantum-card w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-4 relative border border-fuchsia-500/30">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-sm font-mono font-bold text-white uppercase tracking-wider"><i class="fa-solid fa-key text-fuchsia-400 mr-2"></i> Password Recovery</h3>
+    <div id="forgot-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-8 shadow-2xl space-y-5 relative">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h3 class="text-lg font-bold text-white tracking-tight"><i class="fa-solid fa-key text-sky-400 mr-2"></i> Credential Recovery</h3>
                 <button onclick="closeForgotModal()" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <div id="forgot-step-1" class="space-y-3">
-                <p class="text-xs font-mono text-slate-400">Enter your registered email address or phone number to receive a 6-digit recovery code.</p>
+            <div id="forgot-step-1" class="space-y-4">
+                <p class="text-sm text-slate-300">Provide your corporate email or username to initiate recovery protocol.</p>
                 <div>
-                    <label class="block text-[10px] font-mono font-bold text-fuchsia-400 uppercase tracking-widest mb-1">Email or Phone</label>
-                    <input id="forgot-identifier" type="text" placeholder="name@domain.com" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-3 text-sm font-mono text-white placeholder-slate-600 neon-input transition outline-none" required>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Corporate Identifier</label>
+                    <input id="forgot-identifier" type="text" placeholder="name@company.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition" required>
                 </div>
-                <button type="button" onclick="sendResetOtp()" class="w-full bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition cursor-pointer">Send Recovery Code</button>
+                <button type="button" onclick="sendResetOtp()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl text-sm transition cursor-pointer">Dispatch Recovery Token</button>
             </div>
 
-            <div id="forgot-step-2" class="space-y-3 hidden">
+            <div id="forgot-step-2" class="space-y-4 hidden">
                 <p class="text-xs font-mono text-emerald-400" id="forgot-otp-hint"></p>
                 <div>
-                    <label class="block text-[10px] font-mono font-bold text-fuchsia-400 uppercase tracking-widest mb-1">Enter 6-Digit Code</label>
-                    <input id="forgot-otp-input" type="text" maxlength="6" placeholder="123456" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 text-center tracking-[0.4em] text-lg font-mono text-white placeholder-slate-700 neon-input transition outline-none" required>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Enter 6-Digit Token</label>
+                    <input id="forgot-otp-input" type="text" maxlength="6" placeholder="123456" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-center tracking-widest text-lg font-mono text-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition" required>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-mono font-bold text-fuchsia-400 uppercase tracking-widest mb-1">New Password</label>
-                    <input id="forgot-new-pass" type="password" placeholder="••••••••••••" class="w-full bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder-slate-600 neon-input transition outline-none" required>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">New Passkey</label>
+                    <input id="forgot-new-pass" type="password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-sky-500 transition" required>
                 </div>
-                <button type="button" onclick="confirmPasswordReset()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest transition cursor-pointer">Update Password</button>
+                <button type="button" onclick="confirmPasswordReset()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl text-sm transition cursor-pointer">Override Passkey</button>
             </div>
         </div>
     </div>
@@ -208,21 +174,18 @@
             const otpBox = document.getElementById('otp-verification-box');
             const title = document.getElementById('form-title');
             const subtitle = document.getElementById('form-subtitle');
-            const badgeText = document.getElementById('terminal-badge-text');
 
             otpBox.classList.add('hidden');
             if(loginForm.classList.contains('hidden')) {
                 loginForm.classList.remove('hidden');
                 signupForm.classList.add('hidden');
-                title.innerText = "Welcome Back";
-                subtitle.innerText = "Enter your credentials to access the console.";
-                badgeText.innerText = "NEURAL AI GATEWAY ACTIVE";
+                title.innerText = "Executive Access";
+                subtitle.innerText = "Securely authenticate to manage your platform ecosystem.";
             } else {
                 loginForm.classList.add('hidden');
                 signupForm.classList.remove('hidden');
-                title.innerText = "Create Account";
-                subtitle.innerText = "Start your free creator toolkit journey.";
-                badgeText.innerText = "SECURE TENANT ENROLLMENT NODE";
+                title.innerText = "Initialize Tenant";
+                subtitle.innerText = "Create your secure executive creator profile.";
             }
         }
 
@@ -249,11 +212,11 @@
         function setRuleStatus(id, isValid) {
             const el = document.getElementById(id);
             if(isValid) {
-                el.className = "text-emerald-400 font-mono";
-                el.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> ${el.innerText.substring(2)}`;
+                el.className = "text-emerald-400 font-mono flex items-center gap-1";
+                el.innerHTML = `<i class="fa-solid fa-check text-emerald-500"></i> ${el.innerText.substring(2)}`;
             } else {
-                el.className = "text-rose-400 font-mono";
-                el.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> ${el.innerText.substring(2)}`;
+                el.className = "text-slate-500 font-mono flex items-center gap-1";
+                el.innerHTML = `<i class="fa-solid fa-xmark text-rose-500"></i> ${el.innerText.substring(2)}`;
             }
         }
 
@@ -262,7 +225,7 @@
             const pass = document.getElementById('signup-pass').value;
             const strictRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
             if(!strictRegex.test(pass)) {
-                alert("Password security requirements poori nahi ho rahi hain! Kripya checklist check karein.");
+                alert("Passkey security requirements are unmet. Please verify the checklist.");
                 return;
             }
 
@@ -286,11 +249,11 @@
                     activeGeneratedOtp = data.debug_otp;
                     document.getElementById('signup-form').classList.add('hidden');
                     document.getElementById('otp-verification-box').classList.remove('hidden');
-                    document.getElementById('otp-debug-hint').innerText = `[Simulation OTP]: ${activeGeneratedOtp}`;
+                    document.getElementById('otp-debug-hint').innerText = `[Simulation OTP Token]: ${activeGeneratedOtp}`;
                 } else {
-                    alert("Signup Failed: " + data.detail);
+                    alert("Registration Failed: " + JSON.stringify(data.detail));
                 }
-            } catch(e) { alert("Server connection error during signup request."); }
+            } catch(e) { alert("Server connection error during initialization."); }
         }
 
         async function verifyOtpAndRegister() {
@@ -309,7 +272,7 @@
                     try { result = JSON.parse(rawText); } catch (err) { result = { detail: rawText }; }
                     
                     if (response.ok) {
-                        alert(`Account verified successfully!\nYour assigned username is: @${result.assigned_username}\nPlease proceed to sign in.`);
+                        alert(`Tenant verified successfully!\nAssigned Username Handle: @${result.assigned_username}\nPlease proceed to sign in.`);
                         toggleForm();
                     } else {
                         let errorMessage = "Registration validation failed.";
@@ -318,13 +281,13 @@
                         } else {
                             errorMessage = rawText;
                         }
-                        alert("Signup Failed: " + errorMessage);
+                        alert("Activation Failed: " + errorMessage);
                     }
                 } catch (error) {
                     alert("Critical Error: Unable to establish database communication.");
                 }
             } else {
-                alert("Authentication Error: The provided verification code is invalid.");
+                alert("Authentication Mismatch: Provided authorization token is invalid.");
             }
         }
 
@@ -344,7 +307,7 @@
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('plan', data.plan || 'free');
                     window.location.href = "dashboard.html";
-                } else { alert("Login Failed: " + data.detail); }
+                } else { alert("Access Denied: " + data.detail); }
             } catch (err) { alert("Server connection error."); }
         }
 
@@ -357,7 +320,7 @@
 
         async function sendResetOtp() {
             const identifier = document.getElementById('forgot-identifier').value;
-            if(!identifier) { alert("Kripya email enter karein."); return; }
+            if(!identifier) { alert("Please provide your corporate identifier."); return; }
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
@@ -368,9 +331,9 @@
                 if(res.ok) {
                     document.getElementById('forgot-step-1').classList.add('hidden');
                     document.getElementById('forgot-step-2').classList.remove('hidden');
-                    document.getElementById('forgot-otp-hint').innerText = `[Recovery OTP Simulation]: ${data.debug_otp}`;
+                    document.getElementById('forgot-otp-hint').innerText = `[Recovery Token Simulation]: ${data.debug_otp}`;
                 } else { alert("Error: " + data.detail); }
-            } catch(e) { alert("Server error."); }
+            } catch(e) { alert("Server communication error."); }
         }
 
         async function confirmPasswordReset() {
@@ -378,7 +341,7 @@
             const code = document.getElementById('forgot-otp-input').value;
             const newPass = document.getElementById('forgot-new-pass').value;
 
-            if(!code || !newPass) { alert("Sabhi fields bharein."); return; }
+            if(!code || !newPass) { alert("Please complete all required fields."); return; }
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
@@ -386,9 +349,9 @@
                     body: JSON.stringify({ email: email, otp_code: code, new_password: newPass })
                 });
                 if(res.ok) {
-                    alert("🎉 Password successfully updated! Ab aap naye password se login kar sakte hain.");
+                    alert("Passkey successfully overridden! You may now authenticate with your new credentials.");
                     closeForgotModal();
-                } else { alert("Failed to reset password."); }
+                } else { alert("Failed to override passkey."); }
             } catch(e) { alert("Server error."); }
         }
     </script>
