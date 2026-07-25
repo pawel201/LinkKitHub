@@ -247,6 +247,23 @@ init_db()
 # ========================================================
 # 🔐 ADVANCED AUTHENTICATION & OTP SYSTEM
 # ========================================================
+class OTPRequest(BaseModel):
+    email: str
+
+# Naya Route: Sirf OTP generate karega, DB me save nahi karega
+@app.post("/api/auth/request-otp")
+async def request_otp(payload: OTPRequest):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
+    conn.close()
+    
+    generated_otp = str(random.randint(100000, 999999))
+    print(f"🔑 [SIMULATED OTP for {payload.email}]: {generated_otp}")
+    return {"status": "SUCCESS", "message": "OTP sent successfully!", "debug_otp": generated_otp}
 
 @app.post("/api/auth/advanced-signup")
 async def advanced_signup(payload: AdvancedSignup):
@@ -257,8 +274,6 @@ async def advanced_signup(payload: AdvancedSignup):
     if cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
-    
-    generated_otp = str(random.randint(100000, 999999))
     
     try:
         base_username = (payload.first_name.strip() + payload.last_name.strip()).lower()
@@ -280,17 +295,16 @@ async def advanced_signup(payload: AdvancedSignup):
             (new_uid, assigned_username, f"{payload.first_name} {payload.last_name}", "Welcome to my creator page!", "", "midnight", 49.00, "solid", "sans")
         )
         
-        simulate_smtp_email_dispatch(new_uid, payload.email, "🔒 LinkKitHub Verification Code", f"Hello {payload.first_name}, Aapka Signup OTP code hai: {generated_otp}")
+        # Welcome Email (Simulation)
+        simulate_smtp_email_dispatch(new_uid, payload.email, "Welcome to LinkKitHub! 🚀", f"Hello {payload.first_name}, aapka account successfully create ho gaya hai. Aapka assigned username hai: @{assigned_username}")
         
         conn.commit()
         conn.close()
         
-        print(f"🔑 [SIMULATED OTP for {payload.email}]: {generated_otp}")
         return {
             "status": "SUCCESS", 
-            "message": "OTP generated successfully.", 
-            "assigned_username": assigned_username,
-            "debug_otp": generated_otp
+            "message": "Account created successfully.", 
+            "assigned_username": assigned_username
         }
     except Exception as e:
         conn.rollback()
@@ -301,24 +315,33 @@ async def advanced_signup(payload: AdvancedSignup):
 async def login_tenant(payload: UserLogin):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, plan_type FROM users WHERE username = ? AND password = ?", (payload.username.strip().lower(), payload.password))
+    login_id = payload.username.strip().lower()
+    
+    # FIX: Check if input matches username OR email
+    cursor.execute("""
+        SELECT id, username, plan_type 
+        FROM users 
+        WHERE (username = ? OR email = ?) AND password = ?
+    """, (login_id, login_id, payload.password))
+    
     row = cursor.fetchone()
     conn.close()
+    
     if row: 
         return {"status": "SUCCESS", "user_id": row[0], "username": row[1], "plan": row[2]}
-    raise HTTPException(status_code=401, detail="Invalid credentials.")
+    raise HTTPException(status_code=401, detail="Invalid credentials. Username/Email ya Password galat hai.")
 
 @app.post("/api/auth/forgot-password")
 async def forgot_password_request(payload: ForgotPasswordRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id, email FROM users WHERE email = ?", (payload.identifier.strip().lower(),))
+    cursor.execute("SELECT id, email FROM users WHERE email = ? OR username = ?", (payload.identifier.strip().lower(), payload.identifier.strip().lower()))
     user = cursor.fetchone()
     
     if not user:
         conn.close()
-        raise HTTPException(status_code=404, detail="Yeh email hamare database mein nahi mila.")
+        raise HTTPException(status_code=404, detail="Yeh identity hamare database mein nahi mili.")
     
     user_id, email = user
     reset_otp = str(random.randint(100000, 999999))
@@ -338,7 +361,6 @@ async def reset_password_confirm(payload: ResetPasswordModel):
     conn.commit()
     conn.close()
     return {"status": "SUCCESS", "message": "Password successfully updated!"}
-
 
 # ========================================================
 # 💳 PAYMENT GATEWAY & PRO UPGRADE API
