@@ -315,9 +315,14 @@ async def advanced_signup(payload: AdvancedSignup):
 async def login_tenant(payload: UserLogin):
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Input ko clean karna
     login_id = payload.username.strip().lower()
     
-    # FIX: Check if input matches username OR email
+    if login_id.startswith('@'):
+        login_id = login_id[1:]
+        
+    # Check if input matches username OR email
     cursor.execute("""
         SELECT id, username, plan_type 
         FROM users 
