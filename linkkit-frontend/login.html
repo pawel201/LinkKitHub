@@ -213,9 +213,10 @@
             };
 
             try {
-                const res = await fetch(`${BACKEND_URL}/api/auth/advanced-signup`, {
+                // FIX: Yahan ab hum 'request-otp' route ko call karenge
+                const res = await fetch(`${BACKEND_URL}/api/auth/request-otp`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(tempSignupData)
+                    body: JSON.stringify({ email: tempSignupData.email })
                 });
                 const data = await res.json();
                 
@@ -225,7 +226,7 @@
                     document.getElementById('otp-verification-box').classList.remove('hidden');
                     document.getElementById('otp-debug-hint').innerText = `[Token Simulation]: ${activeGeneratedOtp}`;
                 } else {
-                    alert("Registration Rejected: " + JSON.stringify(data.detail));
+                    alert("OTP Request Rejected: " + data.detail);
                 }
             } catch(e) { alert("Server communication error during initialization."); }
         }
@@ -235,27 +236,20 @@
             
             if (userEnteredOtp === activeGeneratedOtp) {
                 try {
+                    // FIX: Jab OTP sahi hoga, tabhi data database mein jayega
                     const response = await fetch(`${BACKEND_URL}/api/auth/advanced-signup`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(tempSignupData)
                     });
                     
-                    const rawText = await response.text();
-                    let result;
-                    try { result = JSON.parse(rawText); } catch (err) { result = { detail: rawText }; }
+                    const data = await response.json();
                     
                     if (response.ok) {
-                        alert(`Tenant registered successfully!\nAssigned Username Handle: @${result.assigned_username}\nPlease proceed to sign in.`);
+                        alert(`Tenant registered successfully!\nAssigned Username Handle: @${data.assigned_username}\nPlease proceed to sign in.`);
                         toggleForm();
                     } else {
-                        let errorMessage = "Registration validation failed.";
-                        if (result && result.detail) {
-                            errorMessage = typeof result.detail === 'string' ? result.detail : JSON.stringify(result.detail);
-                        } else {
-                            errorMessage = rawText;
-                        }
-                        alert("Activation Failed: " + errorMessage);
+                        alert("Activation Failed: " + data.detail);
                     }
                 } catch (error) {
                     alert("Critical Error: Unable to establish database communication.");
@@ -264,7 +258,7 @@
                 alert("Authentication Mismatch: Provided authorization token is invalid.");
             }
         }
-
+        
         async function handleAuth(event, type) {
             event.preventDefault();
             try {
