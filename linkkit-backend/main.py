@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import sqlite3
+import psycopg2
+from psycopg2.extras import DictCursor
 import datetime
 import os
 import random
@@ -10,7 +11,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Sabhi websites ko allow karega
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,24 +20,18 @@ app.add_middleware(
 # ========================================================
 # DATABASE CONFIGURATION & HELPER
 # ========================================================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Render par persistent disk ke liye DB_PATH env variable use kar sakte hain
-DB_NAME = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "linkkithub.db"))
+# DATABASE_URL env variable Render se aayega
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://user:password@localhost/linkkithub")
 
 def get_db_connection():
     """
-    Centralized database connection helper.
-    Ensures thread safety and enables WAL mode for persistent, concurrent writes.
+    Centralized PostgreSQL database connection helper.
     """
-    conn = sqlite3.connect(DB_NAME, check_same_thread=False)
-    # Enable Write-Ahead Logging for better concurrency and prevent DB locks
-    conn.execute("PRAGMA journal_mode=WAL;")
-    # Ensure foreign keys are always enforced
-    conn.execute("PRAGMA foreign_keys = ON;")
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 # ========================================================
-# PYDANTIC DATA VALIDATION MODELS
+# PYDANTIC DATA VALIDATION MODELS (Unchanged)
 # ========================================================
 class UserSignup(BaseModel):
     username: str
@@ -104,7 +99,6 @@ class DomainCreate(BaseModel):
     user_id: int
     custom_domain: str
 
-# Models for Advanced Auth
 class AdvancedSignup(BaseModel):
     first_name: str
     last_name: str
@@ -113,9 +107,8 @@ class AdvancedSignup(BaseModel):
     phone_number: str
     password: str
 
-class VerifyOTP(BaseModel):
+class OTPRequest(BaseModel):
     email: str
-    otp_code: str
 
 class ForgotPasswordRequest(BaseModel):
     identifier: str  
@@ -133,7 +126,7 @@ def simulate_smtp_email_dispatch(user_id: int, recipient: str, subject: str, bod
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO email_logs (user_id, recipient_email, subject, body) VALUES (?, ?, ?, ?)",
+            "INSERT INTO email_logs (user_id, recipient_email, subject, body) VALUES (%s, %s, %s, %s)",
             (user_id, recipient.strip().lower(), subject.strip(), body.strip())
         )
         conn.commit()
@@ -142,120 +135,79 @@ def simulate_smtp_email_dispatch(user_id: int, recipient: str, subject: str, bod
         print(f"❌ [SMTP REGISTRY FAIL]: {e}")
 
 def get_uid_from_username(cursor, username: str):
-    cursor.execute("SELECT id FROM users WHERE username = ?", (username.strip().lower(),))
+    cursor.execute("SELECT id FROM users WHERE username = %s", (username.strip().lower(),))
     res = cursor.fetchone()
     if not res: 
         raise HTTPException(status_code=404, detail="Identity username registry missing.")
     return res[0]
 
-
 # ========================================================
-# DATABASE INITIALIZATION ENGINE
+# DATABASE INITIALIZATION ENGINE (PostgreSQL)
 # ========================================================
 def init_db():
-    print("\n🔥 [STARTUP ENGINE] --> Synchronizing SaaS Subscription Grids...")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, plan_type TEXT DEFAULT "free")')
-    
-    cursor.execute('CREATE TABLE IF NOT EXISTS keyword_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, keyword TEXT NOT NULL, reply_text TEXT NOT NULL, require_follow BOOLEAN DEFAULT 0, UNIQUE(user_id, keyword))')
-    
-    cursor.execute('CREATE TABLE IF NOT EXISTS analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, sender_id TEXT NOT NULL, keyword_triggered TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS link_in_bio (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS leads (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, email TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, UNIQUE(user_id, email))')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS profile_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER UNIQUE NOT NULL,
-            username TEXT NOT NULL,
-            bio_title TEXT NOT NULL,
-            bio_desc TEXT NOT NULL,
-            avatar_url TEXT,
-            theme TEXT NOT NULL,
-            consultation_price REAL DEFAULT 49.00,
-            button_style TEXT DEFAULT 'solid',
-            font_family TEXT DEFAULT 'sans',
-            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-    ''')
-    
-    cursor.execute('CREATE TABLE IF NOT EXISTS link_clicks (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, link_title TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS bookings (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, booking_date TEXT NOT NULL, booking_time TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS digital_products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            download_url TEXT NOT NULL,
-            price REAL DEFAULT 0.00
-        )
-    ''')
-    
-    cursor.execute('CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, amount REAL NOT NULL, item_type TEXT NOT NULL, item_title TEXT NOT NULL, customer_email TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS email_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, recipient_email TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS custom_domains (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE NOT NULL, custom_domain TEXT UNIQUE NOT NULL)')
-    
-    # Migrations for existing databases
+    print("\n🔥 [STARTUP ENGINE] --> Synchronizing PostgreSQL Schemas...")
     try:
-        cursor.execute("PRAGMA table_info(users)")
-        user_cols = [row[1] for row in cursor.fetchall()]
-        if user_cols and "plan_type" not in user_cols:
-            cursor.execute("ALTER TABLE users ADD COLUMN plan_type TEXT DEFAULT 'free'")
-            conn.commit()
-    except Exception: pass
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    try:
-        cursor.execute("PRAGMA table_info(profile_settings)")
-        existing_cols = [row[1] for row in cursor.fetchall()]
-        if existing_cols:
-            if "consultation_price" not in existing_cols:
-                cursor.execute("ALTER TABLE profile_settings ADD COLUMN consultation_price REAL DEFAULT 49.00")
-            if "button_style" not in existing_cols:
-                cursor.execute("ALTER TABLE profile_settings ADD COLUMN button_style TEXT DEFAULT 'solid'")
-            if "font_family" not in existing_cols:
-                cursor.execute("ALTER TABLE profile_settings ADD COLUMN font_family TEXT DEFAULT 'sans'")
-            conn.commit()
-    except Exception: pass
+        cursor.execute('CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR UNIQUE NOT NULL, email VARCHAR UNIQUE NOT NULL, password VARCHAR NOT NULL, plan_type VARCHAR DEFAULT \'free\')')
+        
+        cursor.execute('CREATE TABLE IF NOT EXISTS keyword_rules (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, keyword VARCHAR NOT NULL, reply_text VARCHAR NOT NULL, require_follow BOOLEAN DEFAULT FALSE, UNIQUE(user_id, keyword))')
+        
+        cursor.execute('CREATE TABLE IF NOT EXISTS analytics (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, sender_id VARCHAR NOT NULL, keyword_triggered VARCHAR NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS link_in_bio (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, title VARCHAR NOT NULL, url VARCHAR NOT NULL)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS leads (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, email VARCHAR NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE(user_id, email))')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS profile_settings (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER UNIQUE NOT NULL,
+                username VARCHAR NOT NULL,
+                bio_title VARCHAR NOT NULL,
+                bio_desc VARCHAR NOT NULL,
+                avatar_url VARCHAR,
+                theme VARCHAR NOT NULL,
+                consultation_price NUMERIC DEFAULT 49.00,
+                button_style VARCHAR DEFAULT 'solid',
+                font_family VARCHAR DEFAULT 'sans',
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        ''')
+        
+        cursor.execute('CREATE TABLE IF NOT EXISTS link_clicks (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, link_title VARCHAR NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS bookings (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, name VARCHAR NOT NULL, email VARCHAR NOT NULL, booking_date VARCHAR NOT NULL, booking_time VARCHAR NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS digital_products (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                title VARCHAR NOT NULL,
+                download_url VARCHAR NOT NULL,
+                price NUMERIC DEFAULT 0.00
+            )
+        ''')
+        
+        cursor.execute('CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, amount NUMERIC NOT NULL, item_type VARCHAR NOT NULL, item_title VARCHAR NOT NULL, customer_email VARCHAR NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS email_logs (id SERIAL PRIMARY KEY, user_id INTEGER NOT NULL, recipient_email VARCHAR NOT NULL, subject VARCHAR NOT NULL, body VARCHAR NOT NULL, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)')
+        cursor.execute('CREATE TABLE IF NOT EXISTS custom_domains (id SERIAL PRIMARY KEY, user_id INTEGER UNIQUE NOT NULL, custom_domain VARCHAR UNIQUE NOT NULL)')
+        
+        conn.commit()
+        conn.close()
+        print("✅ [TABLE STATUS] --> PostgreSQL schemas successfully verified and active.\n")
+    except Exception as e:
+        print(f"❌ [DB INIT ERROR] -> Make sure DATABASE_URL is correct. Error: {e}")
 
-    try:
-        cursor.execute("PRAGMA table_info(digital_products)")
-        prod_cols = [row[1] for row in cursor.fetchall()]
-        if prod_cols and "price" not in prod_cols:
-            cursor.execute("ALTER TABLE digital_products ADD COLUMN price REAL DEFAULT 0.00")
-            conn.commit()
-    except Exception: pass
-
-    try:
-        cursor.execute("PRAGMA table_info(keyword_rules)")
-        rule_cols = [row[1] for row in cursor.fetchall()]
-        if rule_cols and "require_follow" not in rule_cols:
-            cursor.execute("ALTER TABLE keyword_rules ADD COLUMN require_follow BOOLEAN DEFAULT 0")
-            conn.commit()
-    except Exception: pass
-    
-    conn.commit()
-    conn.close()
-    print("✅ [TABLE STATUS] --> System schemas successfully verified and active.\n")
-
-# Database ko boot up ke time init call karein
+# Call init_db on startup
 init_db()
-
 
 # ========================================================
 # 🔐 ADVANCED AUTHENTICATION & OTP SYSTEM
 # ========================================================
-class OTPRequest(BaseModel):
-    email: str
-
-# Naya Route: Sirf OTP generate karega, DB me save nahi karega
 @app.post("/api/auth/request-otp")
 async def request_otp(payload: OTPRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
+    cursor.execute("SELECT id FROM users WHERE email = %s", (payload.email.strip().lower(),))
     if cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
@@ -270,7 +222,7 @@ async def advanced_signup(payload: AdvancedSignup):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
+    cursor.execute("SELECT id FROM users WHERE email = %s", (payload.email.strip().lower(),))
     if cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
@@ -284,18 +236,18 @@ async def advanced_signup(payload: AdvancedSignup):
         unique_suffix = str(random.randint(100, 999))
         assigned_username = base_username + unique_suffix
         
+        # In PostgreSQL, we use RETURNING id to get the auto-incremented ID
         cursor.execute(
-            "INSERT INTO users (username, email, password, plan_type) VALUES (?, ?, ?, 'free')",
+            "INSERT INTO users (username, email, password, plan_type) VALUES (%s, %s, %s, 'free') RETURNING id",
             (assigned_username, payload.email.strip().lower(), payload.password)
         )
-        new_uid = cursor.lastrowid
+        new_uid = cursor.fetchone()[0]
         
         cursor.execute(
-            "INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (new_uid, assigned_username, f"{payload.first_name} {payload.last_name}", "Welcome to my creator page!", "", "midnight", 49.00, "solid", "sans")
         )
         
-        # Welcome Email (Simulation)
         simulate_smtp_email_dispatch(new_uid, payload.email, "Welcome to LinkKitHub! 🚀", f"Hello {payload.first_name}, aapka account successfully create ho gaya hai. Aapka assigned username hai: @{assigned_username}")
         
         conn.commit()
@@ -316,17 +268,14 @@ async def login_tenant(payload: UserLogin):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Input ko clean karna
     login_id = payload.username.strip().lower()
-    
     if login_id.startswith('@'):
         login_id = login_id[1:]
         
-    # Check if input matches username OR email
     cursor.execute("""
         SELECT id, username, plan_type 
         FROM users 
-        WHERE (username = ? OR email = ?) AND password = ?
+        WHERE (username = %s OR email = %s) AND password = %s
     """, (login_id, login_id, payload.password))
     
     row = cursor.fetchone()
@@ -341,7 +290,7 @@ async def forgot_password_request(payload: ForgotPasswordRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id, email FROM users WHERE email = ? OR username = ?", (payload.identifier.strip().lower(), payload.identifier.strip().lower()))
+    cursor.execute("SELECT id, email FROM users WHERE email = %s OR username = %s", (payload.identifier.strip().lower(), payload.identifier.strip().lower()))
     user = cursor.fetchone()
     
     if not user:
@@ -354,18 +303,17 @@ async def forgot_password_request(payload: ForgotPasswordRequest):
     simulate_smtp_email_dispatch(user_id, email, "🔑 Password Reset OTP", f"Aapka password reset code hai: {reset_otp}")
     conn.close()
     
-    print(f"🔑 [PASSWORD RESET OTP for {email}]: {reset_otp}")
     return {"status": "SUCCESS", "message": "Reset code sent to email!", "debug_otp": reset_otp}
 
 @app.post("/api/auth/reset-password")
 async def reset_password_confirm(payload: ResetPasswordModel):
     conn = get_db_connection()
     cursor = conn.cursor()
-    
-    cursor.execute("UPDATE users SET password = ? WHERE email = ?", (payload.new_password, payload.email.strip().lower()))
+    cursor.execute("UPDATE users SET password = %s WHERE email = %s", (payload.new_password, payload.email.strip().lower()))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS", "message": "Password successfully updated!"}
+
 
 # ========================================================
 # 💳 PAYMENT GATEWAY & PRO UPGRADE API
@@ -382,10 +330,9 @@ async def verify_payment_and_upgrade(payload: PaymentVerify):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("UPDATE users SET plan_type = 'pro' WHERE id = ?", (payload.user_id,))
-        
+        cursor.execute("UPDATE users SET plan_type = 'pro' WHERE id = %s", (payload.user_id,))
         cursor.execute(
-            "INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (%s, %s, %s, %s, %s)",
             (payload.user_id, payload.amount, f"Subscription ({payload.gateway.upper()})", "LinkKitHub PRO Lifetime/Monthly", "creator@linkkithub.dev")
         )
         
@@ -403,18 +350,18 @@ async def verify_payment_and_upgrade(payload: PaymentVerify):
 async def get_profile_settings(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family FROM profile_settings WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family FROM profile_settings WHERE user_id = %s", (user_id,))
     row = cursor.fetchone()
     conn.close()
     if row: 
-        return {"username": row[0], "bio_title": row[1], "bio_desc": row[2], "avatar_url": row[3], "theme": row[4], "consultation_price": row[5], "button_style": row[6], "font_family": row[7]}
+        return {"username": row[0], "bio_title": row[1], "bio_desc": row[2], "avatar_url": row[3], "theme": row[4], "consultation_price": float(row[5]), "button_style": row[6], "font_family": row[7]}
     raise HTTPException(status_code=404, detail="Missing user customization profile.")
 
 @app.post("/api/profile")
 async def update_profile_settings(profile: ProfileUpdate):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE profile_settings SET username = ?, bio_title = ?, bio_desc = ?, avatar_url = ?, theme = ?, consultation_price = ?, button_style = ?, font_family = ? WHERE user_id = ?", (profile.username.strip(), profile.bio_title.strip(), profile.bio_desc.strip(), profile.avatar_url.strip(), profile.theme.strip(), profile.consultation_price, profile.button_style.strip(), profile.font_family.strip(), profile.user_id))
+    cursor.execute("UPDATE profile_settings SET username = %s, bio_title = %s, bio_desc = %s, avatar_url = %s, theme = %s, consultation_price = %s, button_style = %s, font_family = %s WHERE user_id = %s", (profile.username.strip(), profile.bio_title.strip(), profile.bio_desc.strip(), profile.avatar_url.strip(), profile.theme.strip(), profile.consultation_price, profile.button_style.strip(), profile.font_family.strip(), profile.user_id))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -427,8 +374,8 @@ def create_automation_rule(rule: AutomationRuleCreate):
         user_id = int(rule.creator_id)
         
         cursor.execute(
-            "INSERT INTO keyword_rules (user_id, keyword, reply_text, require_follow) VALUES (?, ?, ?, ?) "
-            "ON CONFLICT(user_id, keyword) DO UPDATE SET reply_text=excluded.reply_text, require_follow=excluded.require_follow",
+            "INSERT INTO keyword_rules (user_id, keyword, reply_text, require_follow) VALUES (%s, %s, %s, %s) "
+            "ON CONFLICT(user_id, keyword) DO UPDATE SET reply_text=EXCLUDED.reply_text, require_follow=EXCLUDED.require_follow",
             (user_id, rule.keyword.lower().strip(), rule.dm_message.strip(), rule.require_follow)
         )
         conn.commit()
@@ -442,18 +389,18 @@ async def add_keyword_rule(rule: RuleCreate):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO keyword_rules (user_id, keyword, reply_text) VALUES (?, ?, ?)", (rule.user_id, rule.keyword.lower().strip(), rule.reply_text.strip()))
+        cursor.execute("INSERT INTO keyword_rules (user_id, keyword, reply_text) VALUES (%s, %s, %s)", (rule.user_id, rule.keyword.lower().strip(), rule.reply_text.strip()))
         conn.commit()
         conn.close()
         return {"status": "SUCCESS"}
-    except sqlite3.IntegrityError: 
+    except Exception: 
         raise HTTPException(status_code=400, detail="Automation keyword already mapped.")
 
 @app.delete("/api/rules/{user_id}/{keyword}")
 async def delete_keyword_rule(user_id: int, keyword: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM keyword_rules WHERE user_id = ? AND keyword = ?", (user_id, keyword.lower().strip()))
+    cursor.execute("DELETE FROM keyword_rules WHERE user_id = %s AND keyword = %s", (user_id, keyword.lower().strip()))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -462,7 +409,7 @@ async def delete_keyword_rule(user_id: int, keyword: str):
 async def add_bio_link(link: LinkCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO link_in_bio (user_id, title, url) VALUES (?, ?, ?)", (link.user_id, link.title.strip(), link.url.strip()))
+    cursor.execute("INSERT INTO link_in_bio (user_id, title, url) VALUES (%s, %s, %s)", (link.user_id, link.title.strip(), link.url.strip()))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -471,7 +418,7 @@ async def add_bio_link(link: LinkCreate):
 async def delete_bio_link(user_id: int, title: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM link_in_bio WHERE user_id = ? AND title = ?", (user_id, title.strip()))
+    cursor.execute("DELETE FROM link_in_bio WHERE user_id = %s AND title = %s", (user_id, title.strip()))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -480,7 +427,7 @@ async def delete_bio_link(user_id: int, title: str):
 async def upload_new_product(prod: ProductCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO digital_products (user_id, title, download_url, price) VALUES (?, ?, ?, ?)", (prod.user_id, prod.title.strip(), prod.download_url.strip(), prod.price))
+    cursor.execute("INSERT INTO digital_products (user_id, title, download_url, price) VALUES (%s, %s, %s, %s)", (prod.user_id, prod.title.strip(), prod.download_url.strip(), prod.price))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -489,7 +436,7 @@ async def upload_new_product(prod: ProductCreate):
 async def remove_digital_product(user_id: int, product_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM digital_products WHERE user_id = ? AND id = ?", (user_id, product_id))
+    cursor.execute("DELETE FROM digital_products WHERE user_id = %s AND id = %s", (user_id, product_id))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -498,7 +445,7 @@ async def remove_digital_product(user_id: int, product_id: int):
 async def remove_lead_entry(user_id: int, email: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM leads WHERE user_id = ? AND email = ?", (user_id, email.strip().lower()))
+    cursor.execute("DELETE FROM leads WHERE user_id = %s AND email = %s", (user_id, email.strip().lower()))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -507,7 +454,7 @@ async def remove_lead_entry(user_id: int, email: str):
 async def cancel_appointment_entry(user_id: int, booking_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM bookings WHERE user_id = ? AND id = ?", (user_id, booking_id))
+    cursor.execute("DELETE FROM bookings WHERE user_id = %s AND id = %s", (user_id, booking_id))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -516,7 +463,7 @@ async def cancel_appointment_entry(user_id: int, booking_id: int):
 async def clear_automation_logs(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM analytics WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM analytics WHERE user_id = %s", (user_id,))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -525,7 +472,7 @@ async def clear_automation_logs(user_id: int):
 async def clear_automated_email_logs(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM email_logs WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM email_logs WHERE user_id = %s", (user_id,))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -534,7 +481,7 @@ async def clear_automated_email_logs(user_id: int):
 async def get_custom_domain(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT custom_domain FROM custom_domains WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT custom_domain FROM custom_domains WHERE user_id = %s", (user_id,))
     row = cursor.fetchone()
     conn.close()
     return {"custom_domain": row[0]} if row else {"custom_domain": ""}
@@ -547,18 +494,18 @@ async def save_custom_domain(payload: DomainCreate):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO custom_domains (user_id, custom_domain) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET custom_domain=excluded.custom_domain", (payload.user_id, clean_domain))
+        cursor.execute("INSERT INTO custom_domains (user_id, custom_domain) VALUES (%s, %s) ON CONFLICT(user_id) DO UPDATE SET custom_domain=EXCLUDED.custom_domain", (payload.user_id, clean_domain))
         conn.commit()
         conn.close()
         return {"status": "SUCCESS"}
-    except sqlite3.IntegrityError: 
+    except Exception: 
         raise HTTPException(status_code=400, detail="Domain configuration linked elsewhere.")
 
 @app.delete("/api/domain/{user_id}")
 async def delete_custom_domain(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM custom_domains WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM custom_domains WHERE user_id = %s", (user_id,))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -571,7 +518,7 @@ async def delete_custom_domain(user_id: int):
 async def resolve_domain(domain: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT u.username FROM users u JOIN custom_domains d ON u.id = d.user_id WHERE d.custom_domain = ?", (domain.strip().lower(),))
+    cursor.execute("SELECT u.username FROM users u JOIN custom_domains d ON u.id = d.user_id WHERE d.custom_domain = %s", (domain.strip().lower(),))
     row = cursor.fetchone()
     conn.close()
     if row: 
@@ -583,17 +530,17 @@ async def get_public_profile(username: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
-    cursor.execute("SELECT username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family FROM profile_settings WHERE user_id = ?", (uid,))
+    cursor.execute("SELECT username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family FROM profile_settings WHERE user_id = %s", (uid,))
     row = cursor.fetchone()
     conn.close()
-    return {"username": row[0], "bio_title": row[1], "bio_desc": row[2], "avatar_url": row[3], "theme": row[4], "consultation_price": row[5], "button_style": row[6], "font_family": row[7]}
+    return {"username": row[0], "bio_title": row[1], "bio_desc": row[2], "avatar_url": row[3], "theme": row[4], "consultation_price": float(row[5]), "button_style": row[6], "font_family": row[7]}
 
 @app.get("/api/public-links")
 async def get_public_bio_links_tenant(username: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
-    cursor.execute("SELECT title, url, (SELECT COUNT(*) FROM link_clicks WHERE user_id = link_in_bio.user_id AND link_title = link_in_bio.title) as clicks FROM link_in_bio WHERE user_id = ?", (uid,))
+    cursor.execute("SELECT title, url, (SELECT COUNT(*) FROM link_clicks WHERE user_id = link_in_bio.user_id AND link_title = link_in_bio.title) as clicks FROM link_in_bio WHERE user_id = %s", (uid,))
     links = [{"title": l[0], "url": l[1], "clicks": l[2]} for l in cursor.fetchall()]
     conn.close()
     return links
@@ -603,8 +550,8 @@ async def get_public_products_tenant(username: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
-    cursor.execute("SELECT id, title, download_url, price FROM digital_products WHERE user_id = ?", (uid,))
-    prods = [{"id": r[0], "title": r[1], "download_url": r[2], "price": r[3]} for r in cursor.fetchall()]
+    cursor.execute("SELECT id, title, download_url, price FROM digital_products WHERE user_id = %s", (uid,))
+    prods = [{"id": r[0], "title": r[1], "download_url": r[2], "price": float(r[3])} for r in cursor.fetchall()]
     conn.close()
     return prods
 
@@ -613,7 +560,7 @@ async def log_link_click_tenant(username: str, title: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
-    cursor.execute("INSERT INTO link_clicks (user_id, link_title) VALUES (?, ?)", (uid, title.strip()))
+    cursor.execute("INSERT INTO link_clicks (user_id, link_title) VALUES (%s, %s)", (uid, title.strip()))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
@@ -624,14 +571,14 @@ async def capture_new_lead_tenant(lead: LeadCreate):
     cursor = conn.cursor()
     try:
         uid = get_uid_from_username(cursor, lead.username)
-        cursor.execute("INSERT INTO leads (user_id, email) VALUES (?, ?)", (uid, lead.email.strip().lower()))
+        cursor.execute("INSERT INTO leads (user_id, email) VALUES (%s, %s)", (uid, lead.email.strip().lower()))
         conn.commit()
         
         subject = "Welcome Insider! 🎁 Your Premium Creator Growth Drop is here!"
-        body = "Hey! Thank you for subscribing to my private LinkKitHub newsletter channel. Get ready for premium strategy updates!"
+        body = "Hey! Thank you for subscribing to my private LinkKitHub newsletter channel."
         simulate_smtp_email_dispatch(uid, lead.email, subject, body)
         return {"status": "SUCCESS"}
-    except sqlite3.IntegrityError: 
+    except Exception: 
         raise HTTPException(status_code=400, detail="This email is already subscribed!")
     finally: conn.close()
 
@@ -641,7 +588,7 @@ async def authorize_premium_checkout(order: OrderCreate):
         conn = get_db_connection()
         cursor = conn.cursor()
         uid = get_uid_from_username(cursor, order.username)
-        cursor.execute("INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)", (uid, order.amount, order.item_type, order.item_title.strip(), order.customer_email.strip().lower()))
+        cursor.execute("INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (%s, %s, %s, %s, %s)", (uid, order.amount, order.item_type, order.item_title.strip(), order.customer_email.strip().lower()))
         conn.commit()
         conn.close()
         
@@ -657,8 +604,8 @@ async def process_new_appointment_tenant(booking: BookingCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, booking.username)
-    cursor.execute("INSERT INTO bookings (user_id, name, email, booking_date, booking_time) VALUES (?, ?, ?, ?, ?)", (uid, booking.name.strip(), booking.email.strip().lower(), booking.booking_date.strip(), booking.booking_time.strip()))
-    cursor.execute("INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)", (uid, booking.amount, "Consultation Slot 🗓️", f"1:1 Sync: {booking.booking_time}", booking.email.strip().lower()))
+    cursor.execute("INSERT INTO bookings (user_id, name, email, booking_date, booking_time) VALUES (%s, %s, %s, %s, %s)", (uid, booking.name.strip(), booking.email.strip().lower(), booking.booking_date.strip(), booking.booking_time.strip()))
+    cursor.execute("INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (%s, %s, %s, %s, %s)", (uid, booking.amount, "Consultation Slot 🗓️", f"1:1 Sync: {booking.booking_time}", booking.email.strip().lower()))
     conn.commit()
     conn.close()
     
@@ -676,43 +623,45 @@ async def get_dashboard_analytics_tenant(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT COUNT(*) FROM analytics WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT COUNT(*) FROM analytics WHERE user_id = %s", (user_id,))
     total_replies = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM leads WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT COUNT(*) FROM leads WHERE user_id = %s", (user_id,))
     real_leads_count = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM link_clicks WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT COUNT(*) FROM link_clicks WHERE user_id = %s", (user_id,))
     real_clicks_count = cursor.fetchone()[0]
-    cursor.execute("SELECT SUM(amount) FROM transactions WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT SUM(amount) FROM transactions WHERE user_id = %s", (user_id,))
     revenue_aggregate = cursor.fetchone()[0]
-    total_revenue = round(revenue_aggregate, 2) if revenue_aggregate else 0.0
+    total_revenue = round(float(revenue_aggregate), 2) if revenue_aggregate else 0.0
     
-    cursor.execute("SELECT keyword, reply_text FROM keyword_rules WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT keyword, reply_text FROM keyword_rules WHERE user_id = %s", (user_id,))
     active_rules = [{"keyword": r[0], "reply_text": r[1]} for r in cursor.fetchall()]
     
-    cursor.execute("SELECT email, timestamp FROM leads WHERE user_id = ? ORDER BY timestamp DESC", (user_id,))
-    captured_emails = [{"email": row[0], "date": row[1]} for row in cursor.fetchall()]
-    cursor.execute("SELECT id, name, email, booking_date, booking_time FROM bookings WHERE user_id = ? ORDER BY booking_date ASC, booking_time ASC", (user_id,))
+    cursor.execute("SELECT email, timestamp FROM leads WHERE user_id = %s ORDER BY timestamp DESC", (user_id,))
+    captured_emails = [{"email": row[0], "date": row[1].isoformat() if row[1] else ""} for row in cursor.fetchall()]
+    cursor.execute("SELECT id, name, email, booking_date, booking_time FROM bookings WHERE user_id = %s ORDER BY booking_date ASC, booking_time ASC", (user_id,))
     active_bookings = [{"id": row[0], "name": row[1], "email": row[2], "date": row[3], "time": row[4]} for row in cursor.fetchall()]
-    cursor.execute("SELECT id, sender_id, keyword_triggered, timestamp FROM analytics WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10", (user_id,))
-    automation_logs = [{"id": log[0], "sender_id": log[1], "keyword": log[2], "date": log[3]} for log in cursor.fetchall()]
-    cursor.execute("SELECT id, title, download_url, price FROM digital_products WHERE user_id = ? ORDER BY id DESC", (user_id,))
-    stored_products = [{"id": row[0], "title": row[1], "download_url": row[2], "price": row[3]} for row in cursor.fetchall()]
-    cursor.execute("SELECT amount, item_type, item_title, customer_email, timestamp FROM transactions WHERE user_id = ? ORDER BY timestamp DESC LIMIT 5", (user_id,))
-    recent_sales = [{"amount": row[0], "type": row[1], "title": row[2], "email": row[3], "date": row[4]} for row in cursor.fetchall()]
-    cursor.execute("SELECT recipient_email, subject, timestamp FROM email_logs WHERE user_id = ? ORDER BY timestamp DESC LIMIT 10", (user_id,))
-    outbound_emails = [{"recipient": row[0], "subject": row[1], "date": row[2]} for row in cursor.fetchall()]
+    cursor.execute("SELECT id, sender_id, keyword_triggered, timestamp FROM analytics WHERE user_id = %s ORDER BY timestamp DESC LIMIT 10", (user_id,))
+    automation_logs = [{"id": log[0], "sender_id": log[1], "keyword": log[2], "date": log[3].isoformat() if log[3] else ""} for log in cursor.fetchall()]
+    cursor.execute("SELECT id, title, download_url, price FROM digital_products WHERE user_id = %s ORDER BY id DESC", (user_id,))
+    stored_products = [{"id": row[0], "title": row[1], "download_url": row[2], "price": float(row[3])} for row in cursor.fetchall()]
+    cursor.execute("SELECT amount, item_type, item_title, customer_email, timestamp FROM transactions WHERE user_id = %s ORDER BY timestamp DESC LIMIT 5", (user_id,))
+    recent_sales = [{"amount": float(row[0]), "type": row[1], "title": row[2], "email": row[3], "date": row[4].isoformat() if row[4] else ""} for row in cursor.fetchall()]
+    cursor.execute("SELECT recipient_email, subject, timestamp FROM email_logs WHERE user_id = %s ORDER BY timestamp DESC LIMIT 10", (user_id,))
+    outbound_emails = [{"recipient": row[0], "subject": row[1], "date": row[2].isoformat() if row[2] else ""} for row in cursor.fetchall()]
     
     dates_list = [(datetime.date.today() - datetime.timedelta(days=i)).isoformat() for i in range(6, -1, -1)]
     clicks_map = {d: 0 for d in dates_list}
     rev_map = {d: 0.0 for d in dates_list}
 
-    cursor.execute("SELECT DATE(timestamp), COUNT(*) FROM link_clicks WHERE user_id = ? GROUP BY DATE(timestamp)", (user_id,))
+    cursor.execute("SELECT DATE(timestamp), COUNT(*) FROM link_clicks WHERE user_id = %s GROUP BY DATE(timestamp)", (user_id,))
     for r in cursor.fetchall():
-        if r[0] in clicks_map: clicks_map[r[0]] = r[1]
+        dt_str = r[0].isoformat() if isinstance(r[0], datetime.date) else r[0]
+        if dt_str in clicks_map: clicks_map[dt_str] = r[1]
 
-    cursor.execute("SELECT DATE(timestamp), SUM(amount) FROM transactions WHERE user_id = ? GROUP BY DATE(timestamp)", (user_id,))
+    cursor.execute("SELECT DATE(timestamp), SUM(amount) FROM transactions WHERE user_id = %s GROUP BY DATE(timestamp)", (user_id,))
     for r in cursor.fetchall():
-        if r[0] in rev_map: rev_map[r[0]] = round(r[1], 2)
+        dt_str = r[0].isoformat() if isinstance(r[0], datetime.date) else r[0]
+        if dt_str in rev_map: rev_map[dt_str] = round(float(r[1]), 2)
 
     chart_data = {
         "labels": [datetime.datetime.strptime(d, "%Y-%m-%d").strftime("%b %d") for d in dates_list],
@@ -753,7 +702,7 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT id FROM users WHERE username = ?", (payload.username.strip().lower(),))
+        cursor.execute("SELECT id FROM users WHERE username = %s", (payload.username.strip().lower(),))
         user_res = cursor.fetchone()
         
         if not user_res:
@@ -762,7 +711,7 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         user_id = user_res[0]
         incoming_text = payload.comment_text.strip().lower()
 
-        cursor.execute("SELECT keyword, reply_text, require_follow FROM keyword_rules WHERE user_id = ?", (user_id,))
+        cursor.execute("SELECT keyword, reply_text, require_follow FROM keyword_rules WHERE user_id = %s", (user_id,))
         rules = cursor.fetchall()
         
         matched_rule = None
@@ -779,7 +728,7 @@ async def simulate_instagram_comment(payload: SimulatedComment):
             if require_follow:
                 reply_text = f"⚠️ [Follow-Gated Check] Pehle hamari profile ko follow karo, tabhi link milega! 🚀\n\nDirect Link: {reply_text}"
 
-            cursor.execute("INSERT INTO analytics (user_id, sender_id, keyword_triggered) VALUES (?, ?, ?)", 
+            cursor.execute("INSERT INTO analytics (user_id, sender_id, keyword_triggered) VALUES (%s, %s, %s)", 
                            (user_id, payload.follower_id, keyword_triggered))
             conn.commit()
             
@@ -797,7 +746,6 @@ async def simulate_instagram_comment(payload: SimulatedComment):
 # ========================================================
 # 👑 ENHANCED SUPER ADMIN & AUTHENTICATION APIs
 # ========================================================
-
 @app.get("/api/admin/users-detailed")
 async def get_all_users_detailed():
     conn = get_db_connection()
@@ -825,26 +773,26 @@ async def purge_user_completely(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT username, email FROM users WHERE id = ?", (user_id,))
+        cursor.execute("SELECT username, email FROM users WHERE id = %s", (user_id,))
         user_record = cursor.fetchone()
         
         if not user_record:
             conn.close()
             raise HTTPException(status_code=404, detail="User entity not found.")
 
-        cursor.execute("DELETE FROM profile_settings WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM keyword_rules WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM link_in_bio WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM digital_products WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM leads WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM bookings WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM transactions WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM email_logs WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM custom_domains WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM link_clicks WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM analytics WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM profile_settings WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM keyword_rules WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM link_in_bio WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM digital_products WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM leads WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM bookings WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM transactions WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM email_logs WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM custom_domains WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM link_clicks WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM analytics WHERE user_id = %s", (user_id,))
         
-        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
         
         conn.commit()
         conn.close()
