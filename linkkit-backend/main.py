@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import sqlite3
 import datetime
 import os
+import random
 
 app = FastAPI()
 
@@ -15,9 +16,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ========================================================
+# DATABASE CONFIGURATION & HELPER
+# ========================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_NAME = os.path.join(BASE_DIR, "linkkithub.db")
+# Render par persistent disk ke liye DB_PATH env variable use kar sakte hain
+DB_NAME = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "linkkithub.db"))
 
+def get_db_connection():
+    """
+    Centralized database connection helper.
+    Ensures thread safety and enables WAL mode for persistent, concurrent writes.
+    """
+    conn = sqlite3.connect(DB_NAME, check_same_thread=False)
+    # Enable Write-Ahead Logging for better concurrency and prevent DB locks
+    conn.execute("PRAGMA journal_mode=WAL;")
+    # Ensure foreign keys are always enforced
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
 
 # ========================================================
 # PYDANTIC DATA VALIDATION MODELS
@@ -31,13 +47,11 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
-# Purana Model (Dashboard ke liye)
 class RuleCreate(BaseModel):
     user_id: int
     keyword: str
     reply_text: str
 
-# Naya Model (Instagram Rule Popup ke liye)
 class AutomationRuleCreate(BaseModel):
     creator_id: str
     keyword: str
@@ -90,13 +104,33 @@ class DomainCreate(BaseModel):
     user_id: int
     custom_domain: str
 
+# Models for Advanced Auth
+class AdvancedSignup(BaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    country_code: str
+    phone_number: str
+    password: str
+
+class VerifyOTP(BaseModel):
+    email: str
+    otp_code: str
+
+class ForgotPasswordRequest(BaseModel):
+    identifier: str  
+
+class ResetPasswordModel(BaseModel):
+    email: str
+    otp_code: str
+    new_password: str
 
 # ========================================================
 # CORE HELPER UTILITIES
 # ========================================================
 def simulate_smtp_email_dispatch(user_id: int, recipient: str, subject: str, body: str):
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO email_logs (user_id, recipient_email, subject, body) VALUES (?, ?, ?, ?)",
@@ -120,12 +154,11 @@ def get_uid_from_username(cursor, username: str):
 # ========================================================
 def init_db():
     print("\n🔥 [STARTUP ENGINE] --> Synchronizing SaaS Subscription Grids...")
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE NOT NULL, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, plan_type TEXT DEFAULT "free")')
     
-    # Updated: Added require_follow column directly to the existing keyword_rules table
     cursor.execute('CREATE TABLE IF NOT EXISTS keyword_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, keyword TEXT NOT NULL, reply_text TEXT NOT NULL, require_follow BOOLEAN DEFAULT 0, UNIQUE(user_id, keyword))')
     
     cursor.execute('CREATE TABLE IF NOT EXISTS analytics (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, sender_id TEXT NOT NULL, keyword_triggered TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
@@ -143,7 +176,8 @@ def init_db():
             theme TEXT NOT NULL,
             consultation_price REAL DEFAULT 49.00,
             button_style TEXT DEFAULT 'solid',
-            font_family TEXT DEFAULT 'sans'
+            font_family TEXT DEFAULT 'sans',
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     ''')
     
@@ -164,7 +198,7 @@ def init_db():
     cursor.execute('CREATE TABLE IF NOT EXISTS email_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, recipient_email TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
     cursor.execute('CREATE TABLE IF NOT EXISTS custom_domains (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER UNIQUE NOT NULL, custom_domain TEXT UNIQUE NOT NULL)')
     
-    # Migrations for existing databases (Including the new require_follow field)
+    # Migrations for existing databases
     try:
         cursor.execute("PRAGMA table_info(users)")
         user_cols = [row[1] for row in cursor.fetchall()]
@@ -194,7 +228,6 @@ def init_db():
             conn.commit()
     except Exception: pass
 
-    # NEW MIGRATION: Add require_follow to old keyword_rules table if missing
     try:
         cursor.execute("PRAGMA table_info(keyword_rules)")
         rule_cols = [row[1] for row in cursor.fetchall()]
@@ -207,26 +240,29 @@ def init_db():
     conn.close()
     print("✅ [TABLE STATUS] --> System schemas successfully verified and active.\n")
 
+# Database ko boot up ke time init call karein
+init_db()
+
 
 # ========================================================
-# TENANT IDENTITY & SUBSCRIPTION APIS
+# 🔐 ADVANCED AUTHENTICATION & OTP SYSTEM
 # ========================================================
+
 @app.post("/api/auth/advanced-signup")
-async def advanced_signup(payload: UserSignup):
-    conn = sqlite3.connect(DB_NAME)
+async def advanced_signup(payload: AdvancedSignup):
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
     if cursor.fetchone():
         conn.close()
-        raise HTTPException(status_code=400, detail="The email address is already registered.")
+        raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
     
     generated_otp = str(random.randint(100000, 999999))
     
     try:
-        # First name aur Last name se clean username generate karna
         base_username = (payload.first_name.strip() + payload.last_name.strip()).lower()
-        base_username = "".join(e for e in base_username if e.isalnum()) # Sirf alphanumeric characters rakhein
+        base_username = "".join(e for e in base_username if e.isalnum())
         if not base_username:
             base_username = payload.email.split('@')[0].lower()
             
@@ -244,11 +280,12 @@ async def advanced_signup(payload: UserSignup):
             (new_uid, assigned_username, f"{payload.first_name} {payload.last_name}", "Welcome to my creator page!", "", "midnight", 49.00, "solid", "sans")
         )
         
-        simulate_smtp_email_dispatch(new_uid, payload.email, "LinkKitHub Verification Code", f"Hello {payload.first_name}, your verification OTP is: {generated_otp}")
+        simulate_smtp_email_dispatch(new_uid, payload.email, "🔒 LinkKitHub Verification Code", f"Hello {payload.first_name}, Aapka Signup OTP code hai: {generated_otp}")
         
         conn.commit()
         conn.close()
         
+        print(f"🔑 [SIMULATED OTP for {payload.email}]: {generated_otp}")
         return {
             "status": "SUCCESS", 
             "message": "OTP generated successfully.", 
@@ -256,12 +293,13 @@ async def advanced_signup(payload: UserSignup):
             "debug_otp": generated_otp
         }
     except Exception as e:
+        conn.rollback()
         conn.close()
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.post("/api/auth/login")
 async def login_tenant(payload: UserLogin):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, username, plan_type FROM users WHERE username = ? AND password = ?", (payload.username.strip().lower(), payload.password))
     row = cursor.fetchone()
@@ -270,14 +308,65 @@ async def login_tenant(payload: UserLogin):
         return {"status": "SUCCESS", "user_id": row[0], "username": row[1], "plan": row[2]}
     raise HTTPException(status_code=401, detail="Invalid credentials.")
 
-@app.post("/api/subscription/upgrade")
-async def upgrade_plan(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+@app.post("/api/auth/forgot-password")
+async def forgot_password_request(payload: ForgotPasswordRequest):
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET plan_type = 'pro' WHERE id = ?", (user_id,))
+    
+    cursor.execute("SELECT id, email FROM users WHERE email = ?", (payload.identifier.strip().lower(),))
+    user = cursor.fetchone()
+    
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Yeh email hamare database mein nahi mila.")
+    
+    user_id, email = user
+    reset_otp = str(random.randint(100000, 999999))
+    
+    simulate_smtp_email_dispatch(user_id, email, "🔑 Password Reset OTP", f"Aapka password reset code hai: {reset_otp}")
+    conn.close()
+    
+    print(f"🔑 [PASSWORD RESET OTP for {email}]: {reset_otp}")
+    return {"status": "SUCCESS", "message": "Reset code sent to email!", "debug_otp": reset_otp}
+
+@app.post("/api/auth/reset-password")
+async def reset_password_confirm(payload: ResetPasswordModel):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("UPDATE users SET password = ? WHERE email = ?", (payload.new_password, payload.email.strip().lower()))
     conn.commit()
     conn.close()
-    return {"status": "SUCCESS", "message": "Plan upgraded to Pro!"}
+    return {"status": "SUCCESS", "message": "Password successfully updated!"}
+
+
+# ========================================================
+# 💳 PAYMENT GATEWAY & PRO UPGRADE API
+# ========================================================
+class PaymentVerify(BaseModel):
+    user_id: int
+    gateway: str  
+    payment_id: str
+    amount: float
+
+@app.post("/api/payment/verify-and-upgrade")
+async def verify_payment_and_upgrade(payload: PaymentVerify):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("UPDATE users SET plan_type = 'pro' WHERE id = ?", (payload.user_id,))
+        
+        cursor.execute(
+            "INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)",
+            (payload.user_id, payload.amount, f"Subscription ({payload.gateway.upper()})", "LinkKitHub PRO Lifetime/Monthly", "creator@linkkithub.dev")
+        )
+        
+        conn.commit()
+        conn.close()
+        return {"status": "SUCCESS", "message": "Payment verified and account upgraded to PRO!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment processing failed: {str(e)}")
 
 
 # ========================================================
@@ -285,7 +374,7 @@ async def upgrade_plan(user_id: int):
 # ========================================================
 @app.get("/api/profile")
 async def get_profile_settings(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family FROM profile_settings WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
@@ -296,22 +385,20 @@ async def get_profile_settings(user_id: int):
 
 @app.post("/api/profile")
 async def update_profile_settings(profile: ProfileUpdate):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("UPDATE profile_settings SET username = ?, bio_title = ?, bio_desc = ?, avatar_url = ?, theme = ?, consultation_price = ?, button_style = ?, font_family = ? WHERE user_id = ?", (profile.username.strip(), profile.bio_title.strip(), profile.bio_desc.strip(), profile.avatar_url.strip(), profile.theme.strip(), profile.consultation_price, profile.button_style.strip(), profile.font_family.strip(), profile.user_id))
     conn.commit()
     conn.close()
     return {"status": "SUCCESS"}
 
-# 🚀 Naya Backend Route jo frontend se match karta hai (No SQLAlchemy needed!)
 @app.post("/api/automation/rule")
 def create_automation_rule(rule: AutomationRuleCreate):
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
         user_id = int(rule.creator_id)
         
-        # Save straight to keyword_rules, including the require_follow flag
         cursor.execute(
             "INSERT INTO keyword_rules (user_id, keyword, reply_text, require_follow) VALUES (?, ?, ?, ?) "
             "ON CONFLICT(user_id, keyword) DO UPDATE SET reply_text=excluded.reply_text, require_follow=excluded.require_follow",
@@ -323,11 +410,10 @@ def create_automation_rule(rule: AutomationRuleCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-# Purana Route for backwards compatibility
 @app.post("/api/rules")
 async def add_keyword_rule(rule: RuleCreate):
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("INSERT INTO keyword_rules (user_id, keyword, reply_text) VALUES (?, ?, ?)", (rule.user_id, rule.keyword.lower().strip(), rule.reply_text.strip()))
         conn.commit()
@@ -338,7 +424,7 @@ async def add_keyword_rule(rule: RuleCreate):
 
 @app.delete("/api/rules/{user_id}/{keyword}")
 async def delete_keyword_rule(user_id: int, keyword: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM keyword_rules WHERE user_id = ? AND keyword = ?", (user_id, keyword.lower().strip()))
     conn.commit()
@@ -347,7 +433,7 @@ async def delete_keyword_rule(user_id: int, keyword: str):
 
 @app.post("/api/links")
 async def add_bio_link(link: LinkCreate):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO link_in_bio (user_id, title, url) VALUES (?, ?, ?)", (link.user_id, link.title.strip(), link.url.strip()))
     conn.commit()
@@ -356,7 +442,7 @@ async def add_bio_link(link: LinkCreate):
 
 @app.delete("/api/links")
 async def delete_bio_link(user_id: int, title: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM link_in_bio WHERE user_id = ? AND title = ?", (user_id, title.strip()))
     conn.commit()
@@ -365,7 +451,7 @@ async def delete_bio_link(user_id: int, title: str):
 
 @app.post("/api/products")
 async def upload_new_product(prod: ProductCreate):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO digital_products (user_id, title, download_url, price) VALUES (?, ?, ?, ?)", (prod.user_id, prod.title.strip(), prod.download_url.strip(), prod.price))
     conn.commit()
@@ -374,7 +460,7 @@ async def upload_new_product(prod: ProductCreate):
 
 @app.delete("/api/products/{user_id}/{product_id}")
 async def remove_digital_product(user_id: int, product_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM digital_products WHERE user_id = ? AND id = ?", (user_id, product_id))
     conn.commit()
@@ -383,7 +469,7 @@ async def remove_digital_product(user_id: int, product_id: int):
 
 @app.delete("/api/leads/{user_id}/{email}")
 async def remove_lead_entry(user_id: int, email: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM leads WHERE user_id = ? AND email = ?", (user_id, email.strip().lower()))
     conn.commit()
@@ -392,7 +478,7 @@ async def remove_lead_entry(user_id: int, email: str):
 
 @app.delete("/api/bookings/{user_id}/{booking_id}")
 async def cancel_appointment_entry(user_id: int, booking_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM bookings WHERE user_id = ? AND id = ?", (user_id, booking_id))
     conn.commit()
@@ -401,7 +487,7 @@ async def cancel_appointment_entry(user_id: int, booking_id: int):
 
 @app.delete("/api/automation-logs/clear")
 async def clear_automation_logs(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM analytics WHERE user_id = ?", (user_id,))
     conn.commit()
@@ -410,7 +496,7 @@ async def clear_automation_logs(user_id: int):
 
 @app.delete("/api/email-logs/clear")
 async def clear_automated_email_logs(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM email_logs WHERE user_id = ?", (user_id,))
     conn.commit()
@@ -419,7 +505,7 @@ async def clear_automated_email_logs(user_id: int):
 
 @app.get("/api/domain")
 async def get_custom_domain(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT custom_domain FROM custom_domains WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
@@ -432,7 +518,7 @@ async def save_custom_domain(payload: DomainCreate):
     if not clean_domain: 
         raise HTTPException(status_code=400, detail="Domain cannot be blank.")
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("INSERT INTO custom_domains (user_id, custom_domain) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET custom_domain=excluded.custom_domain", (payload.user_id, clean_domain))
         conn.commit()
@@ -443,7 +529,7 @@ async def save_custom_domain(payload: DomainCreate):
 
 @app.delete("/api/domain/{user_id}")
 async def delete_custom_domain(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM custom_domains WHERE user_id = ?", (user_id,))
     conn.commit()
@@ -452,11 +538,11 @@ async def delete_custom_domain(user_id: int):
 
 
 # ========================================================
-# PUBLIC PUBLIC GATEWAYS RESOLUTIONS
+# PUBLIC GATEWAYS RESOLUTIONS
 # ========================================================
 @app.get("/api/auth/resolve-domain")
 async def resolve_domain(domain: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT u.username FROM users u JOIN custom_domains d ON u.id = d.user_id WHERE d.custom_domain = ?", (domain.strip().lower(),))
     row = cursor.fetchone()
@@ -467,7 +553,7 @@ async def resolve_domain(domain: str):
 
 @app.get("/api/public-profile")
 async def get_public_profile(username: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
     cursor.execute("SELECT username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family FROM profile_settings WHERE user_id = ?", (uid,))
@@ -477,7 +563,7 @@ async def get_public_profile(username: str):
 
 @app.get("/api/public-links")
 async def get_public_bio_links_tenant(username: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
     cursor.execute("SELECT title, url, (SELECT COUNT(*) FROM link_clicks WHERE user_id = link_in_bio.user_id AND link_title = link_in_bio.title) as clicks FROM link_in_bio WHERE user_id = ?", (uid,))
@@ -487,7 +573,7 @@ async def get_public_bio_links_tenant(username: str):
 
 @app.get("/api/public-products")
 async def get_public_products_tenant(username: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
     cursor.execute("SELECT id, title, download_url, price FROM digital_products WHERE user_id = ?", (uid,))
@@ -497,7 +583,7 @@ async def get_public_products_tenant(username: str):
 
 @app.post("/api/click")
 async def log_link_click_tenant(username: str, title: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, username)
     cursor.execute("INSERT INTO link_clicks (user_id, link_title) VALUES (?, ?)", (uid, title.strip()))
@@ -507,7 +593,7 @@ async def log_link_click_tenant(username: str, title: str):
 
 @app.post("/api/leads")
 async def capture_new_lead_tenant(lead: LeadCreate):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     try:
         uid = get_uid_from_username(cursor, lead.username)
@@ -525,7 +611,7 @@ async def capture_new_lead_tenant(lead: LeadCreate):
 @app.post("/api/checkout/process")
 async def authorize_premium_checkout(order: OrderCreate):
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
         uid = get_uid_from_username(cursor, order.username)
         cursor.execute("INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)", (uid, order.amount, order.item_type, order.item_title.strip(), order.customer_email.strip().lower()))
@@ -541,7 +627,7 @@ async def authorize_premium_checkout(order: OrderCreate):
 
 @app.post("/api/bookings")
 async def process_new_appointment_tenant(booking: BookingCreate):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     uid = get_uid_from_username(cursor, booking.username)
     cursor.execute("INSERT INTO bookings (user_id, name, email, booking_date, booking_time) VALUES (?, ?, ?, ?, ?)", (uid, booking.name.strip(), booking.email.strip().lower(), booking.booking_date.strip(), booking.booking_time.strip()))
@@ -560,7 +646,7 @@ async def process_new_appointment_tenant(booking: BookingCreate):
 # ========================================================
 @app.get("/api/analytics")
 async def get_dashboard_analytics_tenant(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute("SELECT COUNT(*) FROM analytics WHERE user_id = ?", (user_id,))
@@ -637,7 +723,7 @@ class SimulatedComment(BaseModel):
 @app.post("/api/simulate-insta-comment")
 async def simulate_instagram_comment(payload: SimulatedComment):
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute("SELECT id FROM users WHERE username = ?", (payload.username.strip().lower(),))
@@ -649,7 +735,6 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         user_id = user_res[0]
         incoming_text = payload.comment_text.strip().lower()
 
-        # Database se rule padhna (with Follow-Gate flag)
         cursor.execute("SELECT keyword, reply_text, require_follow FROM keyword_rules WHERE user_id = ?", (user_id,))
         rules = cursor.fetchall()
         
@@ -664,7 +749,6 @@ async def simulate_instagram_comment(payload: SimulatedComment):
             reply_text = matched_rule[1]
             require_follow = bool(matched_rule[2])
             
-            # Agar Follow-Gate on hai, toh message change kar do!
             if require_follow:
                 reply_text = f"⚠️ [Follow-Gated Check] Pehle hamari profile ko follow karo, tabhi link milega! 🚀\n\nDirect Link: {reply_text}"
 
@@ -689,7 +773,7 @@ async def simulate_instagram_comment(payload: SimulatedComment):
 
 @app.get("/api/admin/users-detailed")
 async def get_all_users_detailed():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT u.id, u.username, u.email, u.password, u.plan_type, p.bio_title, p.theme 
@@ -701,7 +785,7 @@ async def get_all_users_detailed():
         "id": row[0],
         "username": row[1],
         "email": row[2],
-        "password": row[3], # Password added for administrative auditing
+        "password": row[3],
         "plan": row[4].upper(),
         "bio_title": row[5] or "Not Configured",
         "theme": row[6] or "default"
@@ -711,13 +795,9 @@ async def get_all_users_detailed():
 
 @app.delete("/api/admin/users/purge/{user_id}")
 async def purge_user_completely(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Foreign key constraints enable karke saari tables se user ka data completely wipe karna
-        cursor.execute("PRAGMA foreign_keys = ON;")
-        
-        # Pehle user ka username aur email retrieve kar lete hain audit ke liye agar zaroorat ho
         cursor.execute("SELECT username, email FROM users WHERE id = ?", (user_id,))
         user_record = cursor.fetchone()
         
@@ -725,7 +805,6 @@ async def purge_user_completely(user_id: int):
             conn.close()
             raise HTTPException(status_code=404, detail="User entity not found.")
 
-        # Delete from all related partitions explicitly to avoid integrity lock
         cursor.execute("DELETE FROM profile_settings WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM keyword_rules WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM link_in_bio WHERE user_id = ?", (user_id,))
@@ -738,7 +817,6 @@ async def purge_user_completely(user_id: int):
         cursor.execute("DELETE FROM link_clicks WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM analytics WHERE user_id = ?", (user_id,))
         
-        # Finally delete from main users table
         cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
         
         conn.commit()
@@ -747,137 +825,3 @@ async def purge_user_completely(user_id: int):
     except Exception as e:
         conn.close()
         raise HTTPException(status_code=500, detail=str(e))
-        
-# ========================================================
-# 💳 PAYMENT GATEWAY & PRO UPGRADE API
-# ========================================================
-class PaymentVerify(BaseModel):
-    user_id: int
-    gateway: str  # "stripe" ya "razorpay"
-    payment_id: str
-    amount: float
-
-@app.post("/api/payment/verify-and-upgrade")
-async def verify_payment_and_upgrade(payload: PaymentVerify):
-    try:
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        
-        # 1. User ka plan 'pro' karo
-        cursor.execute("UPDATE users SET plan_type = 'pro' WHERE id = ?", (payload.user_id,))
-        
-        # 2. Transactions table mein entry save karo (Taki Admin/Dashboard mein dikhe)
-        cursor.execute(
-            "INSERT INTO transactions (user_id, amount, item_type, item_title, customer_email) VALUES (?, ?, ?, ?, ?)",
-            (payload.user_id, payload.amount, f"Subscription ({payload.gateway.upper()})", "LinkKitHub PRO Lifetime/Monthly", "creator@linkkithub.dev")
-        )
-        
-        conn.commit()
-        conn.close()
-        return {"status": "SUCCESS", "message": "Payment verified and account upgraded to PRO!"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Payment processing failed: {str(e)}")
-
-    # ========================================================
-# 🔐 ADVANCED AUTHENTICATION & OTP SYSTEM
-# ========================================================
-import random
-
-class AdvancedSignup(BaseModel):
-    first_name: str
-    last_name: str
-    email: str
-    country_code: str
-    phone_number: str
-    password: str
-
-class VerifyOTP(BaseModel):
-    email: str
-    otp_code: str
-
-class ForgotPasswordRequest(BaseModel):
-    identifier: str  # Email ya Phone number
-
-class ResetPasswordModel(BaseModel):
-    email: str
-    otp_code: str
-    new_password: str
-
-# 1. Signup API (Naye user ko register karega aur OTP generate karega)
-@app.post("/api/auth/advanced-signup")
-async def advanced_signup(payload: AdvancedSignup):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    # Check if email already exists
-    cursor.execute("SELECT id FROM users WHERE email = ?", (payload.email.strip().lower(),))
-    if cursor.fetchone():
-        conn.close()
-        raise HTTPException(status_code=400, detail="Yeh Email ID pehle se registered hai!")
-    
-    # 6-Digit OTP generate karna
-    generated_otp = str(random.randint(100000, 999999))
-    
-    try:
-        # Users table mein naye fields save karo (Agar table mein columns nahi hain toh migrate kar lenge)
-        username = payload.email.split('@')[0].lower() + str(random.randint(10,99))
-        
-        cursor.execute(
-            "INSERT INTO users (username, email, password, plan_type) VALUES (?, ?, ?, 'free')",
-            (username, payload.email.strip().lower(), payload.password)
-        )
-        new_uid = cursor.lastrowid
-        
-        # Default profile settings
-        cursor.execute(
-            "INSERT INTO profile_settings (user_id, username, bio_title, bio_desc, avatar_url, theme, consultation_price, button_style, font_family) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (new_uid, username, f"{payload.first_name} {payload.last_name}", "Welcome to my creator page!", "", "midnight", 49.00, "solid", "sans")
-        )
-        
-        # Simulation ke liye email logs mein OTP daalna taaki creator dekh sake
-        simulate_smtp_email_dispatch(new_uid, payload.email, "🔒 LinkKitHub Verification Code", f"Hello {payload.first_name}, Aapka Signup OTP code hai: {generated_otp}")
-        
-        conn.commit()
-        conn.close()
-        
-        print(f"🔑 [SIMULATED OTP for {payload.email}]: {generated_otp}")
-        return {"status": "SUCCESS", "message": "OTP sent successfully!", "debug_otp": generated_otp}
-    except Exception as e:
-        conn.close()
-        raise HTTPException(status_code=500, detail=str(e))
-
-# 2. Forgot Password Request API
-@app.post("/api/auth/forgot-password")
-async def forgot_password_request(payload: ForgotPasswordRequest):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT id, email FROM users WHERE email = ?", (payload.identifier.strip().lower(),))
-    user = cursor.fetchone()
-    
-    if not user:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Yeh email hamare database mein nahi mila.")
-    
-    user_id, email = user
-    reset_otp = str(random.randint(100000, 999999))
-    
-    # Email logs mein reset OTP bhej do (simulation)
-    simulate_smtp_email_dispatch(user_id, email, "🔑 Password Reset OTP", f"Aapka password reset code hai: {reset_otp}")
-    conn.close()
-    
-    print(f"🔑 [PASSWORD RESET OTP for {email}]: {reset_otp}")
-    return {"status": "SUCCESS", "message": "Reset code sent to email!", "debug_otp": reset_otp}
-
-# 3. Reset Password Confirm API
-@app.post("/api/auth/reset-password")
-async def reset_password_confirm(payload: ResetPasswordModel):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    
-    cursor.execute("UPDATE users SET password = ? WHERE email = ?", (payload.new_password, payload.email.strip().lower()))
-    conn.commit()
-    conn.close()
-    return {"status": "SUCCESS", "message": "Password successfully updated!"}
-
-init_db()
