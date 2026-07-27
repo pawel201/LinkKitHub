@@ -6,6 +6,10 @@ from psycopg2.extras import DictCursor
 import datetime
 import os
 import random
+import requests
+
+VERIFY_TOKEN = "linkkithub_secret_token_123"
+META_ACCESS_TOKEN = "IGAAdxm9UFqplBZAFk0aXBibFpmSFlLTXdJOVdDTHhSd2s5eE44RmpUSDdVanVCOGkzaTlWdG5TMDRSWm5GbEN2Q0hKdExOajlLSXlua3ExTTV3VEp6WEtUR2s4aG1Tbnd2Tk5BLTlWMDJtNG9JejhaVkQ5YmxWUlRuZAS1TSEhDcwZDZD"
 
 app = FastAPI()
 
@@ -701,15 +705,54 @@ async def verify_instagram_webhook(request: Request):
 @app.post("/webhook/instagram")
 async def receive_instagram_webhook(request: Request):
     try:
-        # Meta jab koi comment karega toh wo is format me data bhejega
         body = await request.json()
-        print(f"📥 [REAL META WEBHOOK RECEIVED] Data: {body}")
+        print(f"📥 [WEBHOOK DATA]: {body}")
         
-        # Hamesha 200 OK return karna padta hai, warna Meta webhook block kar deta hai
+        # Check karte hain ki kya ye Instagram se aaya hai
+        if body.get("object") == "instagram":
+            for entry in body.get("entry", []):
+                for change in entry.get("changes", []):
+                    # Agar event "comments" ka hai
+                    if change.get("field") == "comments":
+                        value = change.get("value", {})
+                        comment_text = value.get("text", "").lower()
+                        sender_id = value.get("from", {}).get("id")
+                        
+                        print(f"💬 [NEW COMMENT] User {sender_id} said: {comment_text}")
+                        
+                        # 🚀 SIMPLE TEST RULE: Agar comment me "link" ya "ready" hai
+                        if "link" in comment_text or "ready" in comment_text:
+                            reply_message = "Hello! 👋 Yeh raha aapka LinkKitHub link: https://linkkithub.com/spencer_2.00 🚀"
+                            send_instagram_dm(sender_id, reply_message)
+                            
         return Response(content="EVENT_RECEIVED", status_code=200)
     except Exception as e:
         print(f"❌ Webhook Error: {e}")
         return Response(content="ERROR", status_code=500)
+
+# ========================================================
+# 🚀 AUTO-DM SENDER FUNCTION
+# ========================================================
+def send_instagram_dm(recipient_id, message_text):
+    # Meta Graph API ka URL
+    url = "https://graph.facebook.com/v18.0/me/messages"
+    
+    headers = {
+        "Authorization": f"Bearer {META_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "recipient": {"id": recipient_id},
+        "message": {"text": message_text}
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    
+    if response.status_code == 200:
+        print(f"✅ [DM SENT SUCCESS] To: {recipient_id}")
+    else:
+        print(f"❌ [DM FAILED] Error: {response.text}")
 
 # ========================================================
 # 🧪 SIMULATOR ROUTE (For Testing Dashboard Logic)
