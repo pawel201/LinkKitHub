@@ -674,11 +674,15 @@ async def get_dashboard_analytics_tenant(user_id: int):
         "total_replies": total_replies, "total_clicks": real_clicks_count, "lead_captures": real_leads_count, "total_revenue": total_revenue, "recent_sales": recent_sales, "active_rules": active_rules, "captured_emails": captured_emails, "active_bookings": active_bookings, "automation_logs": automation_logs, "stored_products": stored_products, "outbound_emails": outbound_emails, "chart_data": chart_data
     }
 
+from fastapi import Request, Response, HTTPException
+from pydantic import BaseModel
+
 # ========================================================
 # 🤖 META INSTAGRAM AUTOMATION WEBHOOK ENGINE
 # ========================================================
 VERIFY_TOKEN = "linkkithub_secret_token_123"
 
+# 1. GET ROUTE (For Meta Verification)
 @app.get("/webhook/instagram")
 async def verify_instagram_webhook(request: Request):
     query_params = request.query_params
@@ -688,9 +692,28 @@ async def verify_instagram_webhook(request: Request):
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
         print("✅ [META WEBHOOK] Verified successfully!")
-        return int(challenge)
+        # Meta ko strictly Plain Text chahiye hota hai
+        return Response(content=challenge, media_type="text/plain")
+        
     raise HTTPException(status_code=403, detail="Verification token mismatch")
 
+# 2. POST ROUTE (For Real Instagram Comments from Meta)
+@app.post("/webhook/instagram")
+async def receive_instagram_webhook(request: Request):
+    try:
+        # Meta jab koi comment karega toh wo is format me data bhejega
+        body = await request.json()
+        print(f"📥 [REAL META WEBHOOK RECEIVED] Data: {body}")
+        
+        # Hamesha 200 OK return karna padta hai, warna Meta webhook block kar deta hai
+        return Response(content="EVENT_RECEIVED", status_code=200)
+    except Exception as e:
+        print(f"❌ Webhook Error: {e}")
+        return Response(content="ERROR", status_code=500)
+
+# ========================================================
+# 🧪 SIMULATOR ROUTE (For Testing Dashboard Logic)
+# ========================================================
 class SimulatedComment(BaseModel):
     username: str
     follower_id: str
@@ -738,8 +761,8 @@ async def simulate_instagram_comment(payload: SimulatedComment):
         return {"status": "IGNORED", "reason": "No keyword matched"}
 
     except Exception as e:
-        print(f"❌ Webhook Error: {e}")
-        raise HTTPException(status_code=500, detail="Webhook processing failed")
+        print(f"❌ Simulator Error: {e}")
+        raise HTTPException(status_code=500, detail="Simulator processing failed")
     finally:
         conn.close()
 
