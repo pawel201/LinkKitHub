@@ -10,7 +10,7 @@ import requests
 
 VERIFY_TOKEN = "linkkithub_secret_token_123"
 #META_ACCESS_TOKEN = "IGAAdxm9UFqplBZAFk0aXBibFpmSFlLTXdJOVdDTHhSd2s5eE44RmpUSDdVanVCOGkzaTlWdG5TMDRSWm5GbEN2Q0hKdExOajlLSXlua3ExTTV3VEp6WEtUR2s4aG1Tbnd2Tk5BLTlWMDJtNG9JejhaVkQ5YmxWUlRuZAS1TSEhDcwZDZD"
-META_ACCESS_TOKEN = "EAAeZBu9dt7q8BSNSZAZCLZCrZANATsa4R2ZCvyDDla1BvfqNH6ZBt5nMssN9CX8ymAzkmpX9fk68Iap6xEwjJdG1j59lWrsz65qQfysbssKCqEEa04HEj5huUfRnPZBgmNW1FH3olKjZC8Lq1Mn3DDGLBc4Xoh0ihvDrZCTBrRyTaKXlZATXBa9ULIJCwvNGcNPPpo28AaTwgZDZD"
+META_ACCESS_TOKEN = "EAAeZBu9dt7q8BSInDY8eqoRreNT0zhZCSe5GZCFR6xFRetsgyM5ZC26qyjV6YOsb4jBXHkqqn4jrAUkBYj7xD96lTvDpCCybkTFcO7LcGOgRqAIEEZA8F9NenmvMpYrZAtr4JTiNT0hVgU0nbkf20RJxLGyxzZC1ouj2TjH8PytMQXbC6Dkc52Frg6HCfbn1hRyI7L47AZDZD"
 app = FastAPI()
 
 app.add_middleware(
@@ -696,7 +696,7 @@ async def verify_instagram_webhook(request: Request):
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
         print("✅ [META WEBHOOK] Verified successfully!")
-        # Meta ko strictly Plain Text chahiye hota hai
+
         return Response(content=challenge, media_type="text/plain")
         
     raise HTTPException(status_code=403, detail="Verification token mismatch")
